@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Responsive Masonry Styles */
+.masonry-item-1 {
+  width: 90%;
+  aspect-ratio: 16/9;
+}
+
+.masonry-item-2 {
+  width: 60%;
+  aspect-ratio: 4/5;
+}
+
+.masonry-item-3 {
+  width: 55%;
+  aspect-ratio: 1/1;
+}
+
+.masonry-item-4 {
+  width: 95%;
+  aspect-ratio: 21/9;
+}
+
+.masonry-item-5 {
+  width: 50%;
+  aspect-ratio: 3/4;
+}
+
+/* Tablet and up */
+@media (min-width: 768px) {
+  .masonry-item-1 { width: 80%; }
+  .masonry-item-2 { width: 70%; }
+  .masonry-item-3 { width: 65%; }
+  .masonry-item-4 { width: 90%; }
+  .masonry-item-5 { width: 60%; }
+}
+
+@media (min-width: 1024px) {
+  .masonry-item-1 { width: 60%; }
+  .masonry-item-2 { width: 50%; }
+  .masonry-item-3 { width: 45%; }
+  .masonry-item-4 { width: 70%; }
+  .masonry-item-5 { width: 40%; }
+}
+
+/* Custom Row Spacing */
+.instagram-feed-container > div {
+  margin-bottom: 80px; /* Mobile spacing */
+}
+
+@media (min-width: 768px) {
+  .instagram-feed-container > div {
+    margin-bottom: 120px; /* Tablet spacing */
+  }
+}
+
+@media (min-width: 1024px) {
+  .instagram-feed-container > div {
+    margin-bottom: 160px; /* Desktop spacing */
+  }
+}
