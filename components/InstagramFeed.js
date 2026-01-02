@@ -220,9 +220,7 @@ export default function InstagramFeed({ maxPosts = 50 }) {
                 className={`
                   ${style.cssClass}
                   ${positionClass}
-                  group relative block overflow-hidden rounded-xl md:rounded-2xl 
-                  bg-gray-100 shadow-md md:shadow-lg hover:shadow-xl md:hover:shadow-2xl 
-                  transition-all duration-300
+                  group relative block overflow-hidden bg-gray-100 transition-all duration-300
                 `}
               >
                 {/* Media Content */}
