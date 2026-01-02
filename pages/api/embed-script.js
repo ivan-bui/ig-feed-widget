@@ -142,9 +142,9 @@ export default function handler(req, res) {
 
     function createPostElement(post, index) {
       const style = layoutStyles[index % layoutStyles.length];
-      const positionStyle = getPositionClass(style.position);
       const mediaUrl = post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url;
-      
+      let positionStyle = getPositionClass(style.position);
+
       const wrapper = document.createElement('div');
       wrapper.style.cssText = 'width: 100%; margin-bottom: 80px;';
       
@@ -173,14 +173,8 @@ export default function handler(req, res) {
       
       if (post.media_type === 'CAROUSEL_ALBUM') {
         const badge = document.createElement('div');
-        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
-        badge.innerHTML = ' <svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="3" width="7" height="7" rx="1"/>
-                <rect x="14" y="14" width="7" height="7" rx="1"/>
-                <rect x="3" y="14" width="7" height="7" rx="1"/>
-              </svg>
-              <span style="color: white; font-size: 12px; font-weight: 500;">•••</span>';
+        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 20px; padding: 4px 12px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px);';
+        badge.innerHTML = '<svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span style="color: white; font-size: 12px; font-weight: 500;">•••</span>';
         link.appendChild(badge);
       }
 
