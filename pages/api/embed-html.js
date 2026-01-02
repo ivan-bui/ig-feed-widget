@@ -96,10 +96,14 @@ function generateInstagramHTML(posts) {
               right: 12px;
               background: rgba(0, 0, 0, 0.7);
               border-radius: 50%;
-              padding: 6px;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
               backdrop-filter: blur(4px);
             ">
-              <svg width="20" height="20" fill="white" viewBox="0 0 24 24">
+              <svg width="16" height="16" fill="white" viewBox="0 0 24 24" style="display: block;">
                 <path d="M8 5v14l11-7z"/>
               </svg>
             </div>
