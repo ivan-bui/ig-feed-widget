@@ -1,19 +1,16 @@
 export default function handler(req, res) {
   res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
   res.setHeader('Access-Control-Allow-Origin', '*');
   
   const scriptContent = `
 (function() {
   'use strict';
   
-  // Configuration
-  const WIDGET_ORIGIN = 'https://ig-feed-widget-six.vercel.app';
-  const EMBED_PATH = '/embed';
+  const API_BASE = 'https://ig-feed-widget-six.vercel.app';
   
   console.log('Instagram Widget: Initializing...');
   
-  // Find all Instagram feed containers
   const containers = document.querySelectorAll('[data-ig-feed]');
   
   if (containers.length === 0) {
@@ -21,95 +18,35 @@ export default function handler(req, res) {
     return;
   }
   
-  console.log('Instagram Widget: Found ' + containers.length + ' container(s)');
-  
-  // Store iframe references
-  const iframeMap = new Map();
-  
   containers.forEach(function(container, index) {
-    // Get configuration from data attributes
-    const maxPosts = container.getAttribute('data-max-posts') || '';
-    const embedId = 'ig-feed-' + Date.now() + '-' + index;
+    const maxPosts = container.getAttribute('data-max-posts') || '30';
     
-    // Build iframe URL
-    let iframeUrl = WIDGET_ORIGIN + EMBED_PATH;
-    const params = [];
+    // Show loading state
+    container.innerHTML = '<div style="text-align: center; padding: 60px; color: #999;"><div style="display: inline-block; width: 40px; height: 40px; border: 3px solid #f3f3f3; border-top: 3px solid #e1306c; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 20px;">Loading Instagram feed...</p></div><style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
     
-    if (maxPosts) {
-      params.push('limit=' + encodeURIComponent(maxPosts));
-    }
+    // Fetch HTML content
+    const url = API_BASE + '/api/embed-html?limit=' + encodeURIComponent(maxPosts);
     
-    if (params.length > 0) {
-      iframeUrl += '?' + params.join('&');
-    }
+    console.log('Instagram Widget: Fetching from', url);
     
-    console.log('Instagram Widget: Creating iframe #' + index + ' with URL:', iframeUrl);
-    
-    // Create iframe element
-    const iframe = document.createElement('iframe');
-    iframe.id = embedId;
-    iframe.src = iframeUrl;
-    iframe.setAttribute('frameborder', '0');
-    iframe.setAttribute('scrolling', 'no');
-    iframe.setAttribute('title', 'Instagram Feed');
-    iframe.style.cssText = 'width: 100%; border: none; display: block; overflow: hidden; min-height: 600px;';
-    
-    // Store iframe reference
-    iframeMap.set(iframe.contentWindow, iframe);
-    
-    // Clear container and append iframe
-    container.innerHTML = '';
-    container.appendChild(iframe);
-    
-    // Listen for iframe load
-    iframe.addEventListener('load', function() {
-      console.log('Instagram Widget: Iframe #' + index + ' loaded');
-      
-      // Request initial height from iframe
-      setTimeout(function() {
-        iframe.contentWindow.postMessage({ type: 'getHeight' }, WIDGET_ORIGIN);
-      }, 500);
-    });
-    
-    console.log('Instagram Widget: Embedded feed #' + index);
-  });
-  
-  // Set up message listener for iframe resizing
-  window.addEventListener('message', function(event) {
-    // Security: verify origin
-    if (event.origin !== WIDGET_ORIGIN) {
-      return;
-    }
-    
-    console.log('Instagram Widget: Received message:', event.data);
-    
-    // Handle resize messages
-    if (event.data && event.data.type === 'resize') {
-      const height = event.data.height;
-      
-      if (!height || height < 100) {
-        console.warn('Instagram Widget: Invalid height received:', height);
-        return;
-      }
-      
-      // Find the iframe that sent the message
-      const iframes = document.querySelectorAll('iframe[src^="' + WIDGET_ORIGIN + '"]');
-      iframes.forEach(function(iframe) {
-        try {
-          if (iframe.contentWindow === event.source) {
-            const newHeight = height + 'px';
-            iframe.style.height = newHeight;
-            iframe.style.minHeight = newHeight;
-            console.log('Instagram Widget: Resized iframe to ' + newHeight);
-          }
-        } catch (e) {
-          console.error('Instagram Widget: Error resizing iframe:', e);
+    fetch(url)
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('HTTP ' + response.status);
         }
+        return response.text();
+      })
+      .then(function(html) {
+        container.innerHTML = html;
+        console.log('Instagram Widget: Feed #' + index + ' loaded successfully');
+      })
+      .catch(function(error) {
+        console.error('Instagram Widget: Failed to load feed #' + index, error);
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #e53e3e;">Failed to load Instagram feed. Please try again later.</div>';
       });
-    }
   });
   
-  console.log('Instagram Widget: Script loaded successfully');
+  console.log('Instagram Widget: Script loaded');
 })();
   `;
 
