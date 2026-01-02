@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 
-export default function InstagramFeed() {
+export default function InstagramFeed({ maxPosts = 50 }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -8,6 +8,12 @@ export default function InstagramFeed() {
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
   const observerTarget = useRef(null);
+
+  // maxPosts can be:
+  // - number (e.g., 30) = hard limit
+  // - null or "all" = fetch entire feed
+  // - undefined = default to 50
+  const maxPostsLimit = maxPosts === 'all' || maxPosts === null ? Infinity : maxPosts;
 
   // Define 5 different layout patterns
   const layoutStyles = [
@@ -50,7 +56,7 @@ export default function InstagramFeed() {
       const response = await fetch('/api/instagram?limit=15');
       
       const data = await response.json();
-     
+      
       if (data.error) {
         throw new Error(data.error);
       }
@@ -68,8 +74,8 @@ export default function InstagramFeed() {
       } else {
         setHasMore(false);
       }
+      
       setLoading(false);
-
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -77,27 +83,42 @@ export default function InstagramFeed() {
   };
 
   const loadMorePosts = useCallback(async () => {
+    // Check if we've reached the max limit
     if (loadingMore || !hasMore || !nextCursor) return;
+    if (posts.length >= maxPostsLimit) {
+      setHasMore(false);
+      return;
+    }
     
     setLoadingMore(true);
     
     try {
-      // Subsequent loads: 10 posts for optimal performance
-      const response = await fetch(`/api/instagram?limit=10&after=${nextCursor}`);
+      // Calculate how many posts to fetch
+      const remainingPosts = maxPostsLimit - posts.length;
+      const fetchLimit = Math.min(10, remainingPosts); // Fetch up to 10, but not more than remaining
+            
+      // Subsequent loads: 10 posts for optimal performance (or less if near limit)
+      const response = await fetch(`/api/instagram?limit=${fetchLimit}&after=${nextCursor}`);
       const data = await response.json();
       
       if (data.error) {
         throw new Error(data.error);
       }
       
-      setPosts(prev => [...prev, ...data.data]);
+      const newPosts = [...posts, ...data.data];
+      setPosts(newPosts);
       
-      // Update pagination info
-      if (data.paging?.cursors?.after) {
+      // Check if we've hit the limit or run out of posts
+      const reachedLimit = newPosts.length >= maxPostsLimit;
+      const noMorePosts = !data.paging?.cursors?.after;
+      
+      if (reachedLimit) {
+        setHasMore(false);
+      } else if (noMorePosts) {
+        setHasMore(false);
+      } else {
         setNextCursor(data.paging.cursors.after);
         setHasMore(true);
-      } else {
-        setHasMore(false);
       }
       
       setLoadingMore(false);
@@ -106,7 +127,7 @@ export default function InstagramFeed() {
       setLoadingMore(false);
       setHasMore(false);
     }
-  }, [loadingMore, hasMore, nextCursor]);
+  }, [loadingMore, hasMore, nextCursor, posts, maxPostsLimit]);
 
   const getPositionClass = (position) => {
     switch(position) {
@@ -135,7 +156,7 @@ export default function InstagramFeed() {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 md:p-6">
+    <div className="w-full max-w-5xl mx-auto p-4 md:p-6">   
       <div className="instagram-feed-container">
         {posts.map((post, index) => {
           const style = layoutStyles[index % layoutStyles.length];
@@ -185,6 +206,7 @@ export default function InstagramFeed() {
                     </div>
                   )}
                 </div>
+
               </a>
             </div>
           );
