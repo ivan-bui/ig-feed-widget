@@ -4,14 +4,23 @@ export default async function handler(req, res) {
   
   const accessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
   const userId = process.env.INSTAGRAM_USER_ID;
+  const after = req.query.after; // Pagination cursor
+  const limit = req.query.limit || 15; // Default to 15
   
   if (!accessToken || !userId) {
     return res.status(500).json({ error: 'Missing Instagram credentials' });
   }
 
   try {
-    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp';
-    const url = `https://graph.instagram.com/v24.0/${userId}/media?fields=${fields}&access_token=${accessToken}&limit=15`;
+    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,children{media_url,media_type}';
+    
+    // Build URL with pagination support
+    let url = `https://graph.instagram.com/v24.0/${userId}/media?fields=${fields}&access_token=${accessToken}&limit=${limit}`;
+    
+    // Add cursor for pagination
+    if (after) {
+      url += `&after=${after}`;
+    }
     
     const response = await fetch(url);
     const data = await response.json();
@@ -20,7 +29,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: data.error.message });
     }
     
-    res.status(200).json(data);
+    // Return data with pagination info
+    res.status(200).json({
+      data: data.data,
+      paging: data.paging || {} // Includes "next" and "previous" cursors
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch Instagram posts' });
   }
