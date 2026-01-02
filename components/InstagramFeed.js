@@ -28,6 +28,54 @@ export default function InstagramFeed({ maxPosts = 50 }) {
     fetchInitialPosts();
   }, []);
 
+  // Send height updates to parent window for seamless scrolling
+  useEffect(() => {
+    const sendHeight = () => {
+      if (window.parent !== window) {
+        const height = document.documentElement.scrollHeight;
+        window.parent.postMessage({ type: 'resize', height }, '*');
+      }
+    };
+
+    // Send initial height
+    sendHeight();
+
+    // Send height after a delay (for images to load)
+    const timeouts = [100, 300, 500, 1000, 2000];
+    const timeoutIds = timeouts.map(delay => 
+      setTimeout(sendHeight, delay)
+    );
+
+    // Send height when posts change
+    if (!loading && !loadingMore) {
+      setTimeout(sendHeight, 100);
+    }
+
+    // Send height when images load
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+      if (img.complete) {
+        sendHeight();
+      } else {
+        img.addEventListener('load', sendHeight);
+        img.addEventListener('error', sendHeight);
+      }
+    });
+
+    // Send height when window resizes
+    window.addEventListener('resize', sendHeight);
+    
+    // Cleanup
+    return () => {
+      timeoutIds.forEach(id => clearTimeout(id));
+      window.removeEventListener('resize', sendHeight);
+      images.forEach(img => {
+        img.removeEventListener('load', sendHeight);
+        img.removeEventListener('error', sendHeight);
+      });
+    };
+  }, [posts, loading, loadingMore]);
+
   // Infinite scroll observer
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -76,6 +124,7 @@ export default function InstagramFeed({ maxPosts = 50 }) {
       }
       
       setLoading(false);
+
     } catch (err) {
       setError(err.message);
       setLoading(false);
@@ -122,7 +171,6 @@ export default function InstagramFeed({ maxPosts = 50 }) {
       }
       
       setLoadingMore(false);
-
     } catch (err) {
       setLoadingMore(false);
       setHasMore(false);
@@ -156,7 +204,8 @@ export default function InstagramFeed({ maxPosts = 50 }) {
   }
 
   return (
-    <div className="w-full max-w-5xl mx-auto p-4 md:p-6">   
+    <div className="w-full max-w-5xl mx-auto p-4 md:p-6">
+
       <div className="instagram-feed-container">
         {posts.map((post, index) => {
           const style = layoutStyles[index % layoutStyles.length];
@@ -207,6 +256,14 @@ export default function InstagramFeed({ maxPosts = 50 }) {
                   )}
                 </div>
 
+                {/* Hover Overlay with Caption */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6">
+                    <p className="text-white text-xs md:text-sm lg:text-base line-clamp-2 md:line-clamp-3">
+                      {post.caption}
+                    </p>
+                  </div>
+                </div>
               </a>
             </div>
           );
