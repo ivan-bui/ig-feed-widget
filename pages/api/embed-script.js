@@ -79,7 +79,7 @@ export default function handler(req, res) {
       const indicator = document.createElement('div');
       indicator.style.cssText = 'display: none; text-align: center; padding: 40px; color: #999;';
       indicator.innerHTML = \`
-        <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top: 3px solid #e1306c; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+        <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top: 3px solid #595959; border-radius: 50%; animation: spin 1s linear infinite;"></div>
         <p style="margin-top: 12px; font-size: 14px;">Loading more posts...</p>
         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>
       \`;
