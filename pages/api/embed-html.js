@@ -136,8 +136,8 @@ function generateInstagramHTML(posts) {
     <div style="
       width: 100%;
       max-width: 1200px;
-      margin: 0 auto;
-      padding: 16px;
+      margin: 0;
+      padding: 16px 0;
       box-sizing: border-box;
     ">
       ${postsHTML}
