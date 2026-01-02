@@ -131,8 +131,18 @@ export default function handler(req, res) {
         });
     }
     
+    function getPositionClass = (position) => {
+      switch(position) {
+        case 'left': return 'margin-right: auto;';
+        case 'right': return 'margin-left: auto;';
+        case 'center': return 'margin: 0 auto;';
+        default: return 'margin: 0 auto;';
+      }
+    };
+
     function createPostElement(post, index) {
       const style = layoutStyles[index % layoutStyles.length];
+      const positionStyle = getPositionClass(style.position);
       const mediaUrl = post.media_type === 'VIDEO' ? post.thumbnail_url : post.media_url;
       
       const wrapper = document.createElement('div');
@@ -142,7 +152,7 @@ export default function handler(req, res) {
       link.href = post.permalink;
       link.target = '_blank';
       link.rel = 'noopener noreferrer';
-      link.style.cssText = 'display: block; position: relative; width: ' + style.width + '; aspect-ratio: ' + style.aspectRatio + '; overflow: hidden; background: #f3f4f6; transition: all 0.3s ease; text-decoration: none;';
+      link.style.cssText = positionStyle + ' display: block; position: relative; width: ' + style.width + '; aspect-ratio: ' + style.aspectRatio + '; overflow: hidden; background: #f3f4f6; transition: all 0.3s ease; text-decoration: none;';
       
       const img = document.createElement('img');
       img.src = mediaUrl;
@@ -161,6 +171,19 @@ export default function handler(req, res) {
         link.appendChild(badge);
       }
       
+      if (post.media_type === 'CAROUSEL_ALBUM') {
+        const badge = document.createElement('div');
+        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+        badge.innerHTML = ' <svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+              </svg>
+              <span style="color: white; font-size: 12px; font-weight: 500;">•••</span>';
+        link.appendChild(badge);
+      }
+
       wrapper.appendChild(link);
       return wrapper;
     }
