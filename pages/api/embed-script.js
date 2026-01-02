@@ -131,7 +131,7 @@ export default function handler(req, res) {
         });
     }
     
-    function getPositionClass = (position) => {
+    function getPositionClass(position) {
       switch(position) {
         case 'left': return 'margin-right: auto;';
         case 'right': return 'margin-left: auto;';
