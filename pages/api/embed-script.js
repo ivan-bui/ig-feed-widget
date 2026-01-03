@@ -22,18 +22,14 @@ export default function handler(req, res) {
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     @keyframes igModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes igModalFadeOut { from { opacity: 1; } to { opacity: 0; } }
-    @keyframes igModalSlideIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
-    @keyframes igImageFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes igBounce { 0%, 100% { transform: translateY(0) translateX(-50%); } 50% { transform: translateY(-10px) translateX(-50%); } }
     .ig-modal-overlay { animation: igModalFadeIn 0.3s ease-out forwards; }
     .ig-modal-overlay.closing { animation: igModalFadeOut 0.3s ease-out forwards; }
-    .ig-modal-content { animation: igModalSlideIn 0.3s ease-out forwards; }
-    .ig-modal-transitioning-next { opacity: 0; transform: translateX(20px); }
-    .ig-modal-transitioning-prev { opacity: 0; transform: translateX(-20px); }
-    .ig-carousel-image { animation: igImageFadeIn 0.4s ease-out forwards; opacity: 0; }
     .ig-scroll-indicator { animation: igBounce 2s ease-in-out infinite; }
     .ig-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     .ig-scrollbar-hide::-webkit-scrollbar { display: none; }
+    .ig-slide-container { display: flex; width: 300vw; height: 100%; transition: transform 0.3s ease-out; }
+    .ig-slide-panel { width: 100vw; height: 100%; flex-shrink: 0; overflow: hidden; }
   \`;
   document.head.appendChild(styleSheet);
 
@@ -50,6 +46,7 @@ export default function handler(req, res) {
     let allPosts = [];
     let selectedPostIndex = null;
     let modalElement = null;
+    let isSliding = false;
 
     // Touch handling
     let touchStartX = 0;
@@ -70,20 +67,16 @@ export default function handler(req, res) {
     init();
 
     function init() {
-      // Create main container
       const mainContainer = document.createElement('div');
       mainContainer.style.cssText = 'width: 100%; max-width: 1200px; margin: 0 auto; padding: 0; box-sizing: border-box;';
 
-      // Create posts container
       postsContainer = document.createElement('div');
       postsContainer.style.cssText = 'width: 100%;';
       mainContainer.appendChild(postsContainer);
 
-      // Create loading indicator
       loadingIndicator = createLoadingIndicator();
       mainContainer.appendChild(loadingIndicator);
 
-      // Create scroll trigger
       const scrollTrigger = document.createElement('div');
       scrollTrigger.id = 'ig-scroll-trigger-' + containerIndex;
       scrollTrigger.style.cssText = 'height: 1px; width: 100%;';
@@ -92,7 +85,6 @@ export default function handler(req, res) {
       container.innerHTML = '';
       container.appendChild(mainContainer);
 
-      // Setup intersection observer
       observer = new IntersectionObserver(function(entries) {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
           loadMorePosts();
@@ -100,21 +92,14 @@ export default function handler(req, res) {
       }, { rootMargin: '200px' });
 
       observer.observe(scrollTrigger);
-
-      // Setup keyboard listener
       document.addEventListener('keydown', handleKeyDown);
-
-      // Load initial posts
       loadMorePosts(true);
     }
 
     function createLoadingIndicator() {
       const indicator = document.createElement('div');
       indicator.style.cssText = 'display: none; text-align: center; padding: 40px; color: #999;';
-      indicator.innerHTML = \`
-        <div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top: 3px solid #595959; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-        <p style="margin-top: 12px; font-size: 14px;">Loading...</p>
-      \`;
+      indicator.innerHTML = '<div style="display: inline-block; width: 32px; height: 32px; border: 3px solid #f3f3f3; border-top: 3px solid #595959; border-radius: 50%; animation: spin 1s linear infinite;"></div><p style="margin-top: 12px; font-size: 14px;">Loading...</p>';
       return indicator;
     }
 
@@ -143,24 +128,21 @@ export default function handler(req, res) {
             return;
           }
 
-          // Render posts
-          data.posts.forEach(function(post, index) {
+          data.posts.forEach(function(post) {
             const postIndex = allPosts.length;
             allPosts.push(post);
             const postEl = createPostElement(post, postIndex);
             postsContainer.appendChild(postEl);
           });
 
-          // Update state
           hasMore = data.hasMore;
           nextCursor = data.nextCursor;
-
           isLoading = false;
           loadingIndicator.style.display = 'none';
         })
         .catch(function(error) {
           console.error('Instagram Widget: Failed to load posts', error);
-          loadingIndicator.innerHTML = '<p style="color: #e53e3e; text-align: center; padding: 20px;">Failed to load posts. Please try refreshing.</p>';
+          loadingIndicator.innerHTML = '<p style="color: #e53e3e; text-align: center; padding: 20px;">Failed to load posts.</p>';
           isLoading = false;
           hasMore = false;
         });
@@ -184,37 +166,33 @@ export default function handler(req, res) {
       wrapper.style.cssText = 'width: 100%; margin-bottom: 80px;';
 
       const button = document.createElement('button');
-      button.style.cssText = positionStyle + ' display: block; position: relative; width: ' + style.width + '; aspect-ratio: ' + style.aspectRatio + '; overflow: hidden; background: #f3f4f6; transition: all 0.3s ease; text-decoration: none; border: none; padding: 0; cursor: pointer;';
+      button.style.cssText = positionStyle + ' display: block; position: relative; width: ' + style.width + '; aspect-ratio: ' + style.aspectRatio + '; overflow: hidden; background: #f3f4f6; transition: all 0.3s ease; border: none; padding: 0; cursor: pointer;';
       button.onclick = function() { openModal(index); };
 
       const img = document.createElement('img');
       img.src = mediaUrl;
       img.alt = post.caption || 'Instagram post';
       img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;';
-      img.onmouseover = function() { this.style.transform = 'scale(1.05)'; };
-      img.onmouseout = function() { this.style.transform = 'scale(1)'; };
 
       button.appendChild(img);
 
-      // Add media badges
       if (post.media_type === 'VIDEO') {
         const badge = document.createElement('div');
-        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);';
+        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;';
         badge.innerHTML = '<svg width="16" height="16" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
         button.appendChild(badge);
       }
 
       if (post.media_type === 'CAROUSEL_ALBUM') {
         const badge = document.createElement('div');
-        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0, 0, 0, 0.7); border-radius: 20px; padding: 4px 12px; display: flex; align-items: center; gap: 4px; backdrop-filter: blur(4px);';
-        const childCount = post.children && post.children.data ? post.children.data.length : '•••';
-        badge.innerHTML = '<svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span style="color: white; font-size: 12px; font-weight: 500;">' + childCount + '</span>';
+        badge.style.cssText = 'position: absolute; top: 12px; right: 12px; background: rgba(0,0,0,0.7); border-radius: 20px; padding: 4px 12px; display: flex; align-items: center; gap: 4px;';
+        const count = post.children && post.children.data ? post.children.data.length : '•••';
+        badge.innerHTML = '<svg width="16" height="16" fill="none" stroke="white" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg><span style="color:white;font-size:12px;">' + count + '</span>';
         button.appendChild(badge);
       }
 
-      // Hover overlay with caption
       const overlay = document.createElement('div');
-      overlay.style.cssText = 'position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent, transparent); opacity: 0; transition: opacity 0.3s ease; display: flex; align-items: flex-end; padding: 16px;';
+      overlay.style.cssText = 'position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.7), transparent, transparent); opacity: 0; transition: opacity 0.3s; display: flex; align-items: flex-end; padding: 16px;';
       overlay.innerHTML = '<p style="color: white; font-size: 14px; margin: 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-align: left;">' + (post.caption || '') + '</p>';
       button.onmouseover = function() { overlay.style.opacity = '1'; img.style.transform = 'scale(1.05)'; };
       button.onmouseout = function() { overlay.style.opacity = '0'; img.style.transform = 'scale(1)'; };
@@ -224,10 +202,31 @@ export default function handler(req, res) {
       return wrapper;
     }
 
-    // Modal functions
+    function getCarouselItems(post) {
+      if (post && post.media_type === 'CAROUSEL_ALBUM' && post.children && post.children.data) {
+        return post.children.data;
+      }
+      return post ? [post] : [];
+    }
+
+    function preloadImages(post) {
+      if (!post) return;
+      const items = getCarouselItems(post);
+      items.forEach(function(item) {
+        const img = new Image();
+        img.src = item.media_type === 'VIDEO' ? (item.thumbnail_url || item.media_url) : item.media_url;
+      });
+    }
+
     function openModal(index) {
       selectedPostIndex = index;
+      isSliding = false;
       document.body.style.overflow = 'hidden';
+
+      // Preload adjacent posts
+      if (index > 0) preloadImages(allPosts[index - 1]);
+      if (index < allPosts.length - 1) preloadImages(allPosts[index + 1]);
+
       renderModal();
     }
 
@@ -246,24 +245,31 @@ export default function handler(req, res) {
     }
 
     function navigatePost(newIndex) {
-      if (newIndex < 0 || newIndex >= allPosts.length) return;
+      if (newIndex < 0 || newIndex >= allPosts.length || isSliding) return;
 
-      const content = modalElement.querySelector('.ig-modal-content');
-      const direction = newIndex > selectedPostIndex ? 'next' : 'prev';
-      content.classList.add('ig-modal-transitioning-' + direction);
+      isSliding = true;
+      const direction = newIndex > selectedPostIndex ? 'left' : 'right';
+      const slideContainer = modalElement.querySelector('.ig-slide-container');
+
+      // Preload the post after the one we're navigating to
+      if (direction === 'left' && newIndex + 1 < allPosts.length) {
+        preloadImages(allPosts[newIndex + 1]);
+      } else if (direction === 'right' && newIndex - 1 >= 0) {
+        preloadImages(allPosts[newIndex - 1]);
+      }
+
+      // Animate slide
+      if (direction === 'left') {
+        slideContainer.style.transform = 'translateX(-200vw)';
+      } else {
+        slideContainer.style.transform = 'translateX(0)';
+      }
 
       setTimeout(function() {
         selectedPostIndex = newIndex;
+        isSliding = false;
         renderModalContent();
-        content.classList.remove('ig-modal-transitioning-next', 'ig-modal-transitioning-prev');
-      }, 200);
-    }
-
-    function getCarouselItems(post) {
-      if (post.media_type === 'CAROUSEL_ALBUM' && post.children && post.children.data) {
-        return post.children.data;
-      }
-      return [post];
+      }, 300);
     }
 
     function renderModal() {
@@ -273,10 +279,9 @@ export default function handler(req, res) {
 
       modalElement = document.createElement('div');
       modalElement.className = 'ig-modal-overlay';
-      modalElement.style.cssText = 'position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(4px);';
+      modalElement.style.cssText = 'position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.95); overflow: hidden;';
       modalElement.onclick = function(e) { if (e.target === modalElement) closeModal(); };
 
-      // Touch events for horizontal swipe (post navigation)
       modalElement.ontouchstart = function(e) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
@@ -291,182 +296,133 @@ export default function handler(req, res) {
       document.body.appendChild(modalElement);
     }
 
+    function renderPostContent(post) {
+      if (!post) return '';
+
+      const items = getCarouselItems(post);
+      const hasMultiple = items.length > 1;
+      const date = new Date(post.timestamp);
+      const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+      let html = '<div class="ig-slide-panel">';
+
+      if (hasMultiple) {
+        html += '<div class="ig-scrollbar-hide" style="height: 100%; overflow-y: auto;">';
+        html += '<div style="max-width: 900px; margin: 0 auto; padding: 80px 16px 48px;">';
+
+        if (post.caption) {
+          html += '<div style="margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">';
+          html += '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0;">' + post.caption + '</p>';
+          html += '</div>';
+        }
+
+        html += '<div style="display: flex; flex-direction: column; gap: 16px;">';
+        items.forEach(function(item) {
+          if (item.media_type === 'VIDEO') {
+            html += '<video src="' + item.media_url + '" poster="' + (item.thumbnail_url || '') + '" controls playsinline style="width: 100%; height: auto;"></video>';
+          } else {
+            html += '<img src="' + item.media_url + '" alt="' + (post.caption || 'Image') + '" style="width: 100%; height: auto; display: block;" />';
+          }
+        });
+        html += '</div>';
+
+        html += '<div style="padding: 48px 0; display: flex; align-items: center; justify-content: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;">';
+        html += '<span>' + dateStr + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span>';
+        html += '<a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">View on Instagram</a>';
+        html += '</div></div></div>';
+      } else {
+        const item = items[0];
+        html += '<div style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;">';
+        html += '<div style="max-width: 900px; width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;">';
+
+        if (item.media_type === 'VIDEO') {
+          html += '<video src="' + item.media_url + '" poster="' + (item.thumbnail_url || '') + '" controls autoplay playsinline style="max-width: 100%; max-height: 70vh; object-fit: contain;"></video>';
+        } else {
+          html += '<img src="' + item.media_url + '" alt="' + (post.caption || 'Image') + '" style="max-width: 100%; max-height: 70vh; object-fit: contain;" />';
+        }
+        html += '</div>';
+
+        if (post.caption) {
+          html += '<div style="margin-top: 24px; max-width: 600px; text-align: center; padding: 0 16px;">';
+          html += '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0;">' + post.caption + '</p>';
+          html += '</div>';
+        }
+
+        html += '<div style="margin-top: 16px; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;">';
+        html += '<span>' + dateStr + '</span>';
+        html += '<a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;">View on Instagram</a>';
+        html += '</div></div>';
+      }
+
+      html += '</div>';
+      return html;
+    }
+
     function renderModalContent() {
       const post = allPosts[selectedPostIndex];
+      const prevPost = selectedPostIndex > 0 ? allPosts[selectedPostIndex - 1] : null;
+      const nextPost = selectedPostIndex < allPosts.length - 1 ? allPosts[selectedPostIndex + 1] : null;
       const items = getCarouselItems(post);
-      const hasMultipleItems = items.length > 1;
-      const hasPrevPost = selectedPostIndex > 0;
-      const hasNextPost = selectedPostIndex < allPosts.length - 1;
+      const hasMultiple = items.length > 1;
+      const hasPrev = selectedPostIndex > 0;
+      const hasNext = selectedPostIndex < allPosts.length - 1;
 
-      const content = document.createElement('div');
-      content.className = 'ig-modal-content';
-      content.style.cssText = 'position: relative; width: 100%; height: 100%; transition: all 0.2s ease;';
-      content.onclick = function(e) { e.stopPropagation(); };
+      let html = '';
 
       // Close button
-      const closeBtn = document.createElement('button');
-      closeBtn.style.cssText = 'position: absolute; top: 16px; right: 16px; z-index: 10; background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; padding: 8px; transition: color 0.2s;';
-      closeBtn.innerHTML = '<svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>';
-      closeBtn.onmouseover = function() { this.style.color = 'white'; };
-      closeBtn.onmouseout = function() { this.style.color = 'rgba(255,255,255,0.7)'; };
-      closeBtn.onclick = closeModal;
-      content.appendChild(closeBtn);
+      html += '<button onclick="event.stopPropagation();" style="position: absolute; top: 16px; right: 16px; z-index: 10; background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; padding: 8px;">';
+      html += '<svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12"/></svg>';
+      html += '</button>';
 
-      // Post counter
-      const counter = document.createElement('div');
-      counter.style.cssText = 'position: absolute; top: 20px; left: 20px; z-index: 10; color: rgba(255,255,255,0.5); font-size: 14px; font-weight: 300;';
-      counter.textContent = (selectedPostIndex + 1) + ' / ' + allPosts.length;
-      content.appendChild(counter);
+      // Counter
+      html += '<div style="position: absolute; top: 20px; left: 20px; z-index: 10; color: rgba(255,255,255,0.5); font-size: 14px;">' + (selectedPostIndex + 1) + ' / ' + allPosts.length + '</div>';
 
-      // Prev post button
-      if (hasPrevPost) {
-        const prevBtn = document.createElement('button');
-        prevBtn.style.cssText = 'position: absolute; left: 8px; top: 50%; transform: translateY(-50%); z-index: 10; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 12px; transition: all 0.2s;';
-        prevBtn.innerHTML = '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7"/></svg>';
-        prevBtn.onmouseover = function() { this.style.color = 'white'; this.style.transform = 'translateY(-50%) scale(1.1)'; };
-        prevBtn.onmouseout = function() { this.style.color = 'rgba(255,255,255,0.5)'; this.style.transform = 'translateY(-50%)'; };
-        prevBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex - 1); };
-        content.appendChild(prevBtn);
+      // Nav buttons
+      if (hasPrev) {
+        html += '<button class="ig-nav-prev" style="position: absolute; left: 8px; top: 50%; transform: translateY(-50%); z-index: 10; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 12px;">';
+        html += '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7"/></svg>';
+        html += '</button>';
+      }
+      if (hasNext) {
+        html += '<button class="ig-nav-next" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 10; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 12px;">';
+        html += '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7"/></svg>';
+        html += '</button>';
       }
 
-      // Next post button
-      if (hasNextPost) {
-        const nextBtn = document.createElement('button');
-        nextBtn.style.cssText = 'position: absolute; right: 8px; top: 50%; transform: translateY(-50%); z-index: 10; background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 12px; transition: all 0.2s;';
-        nextBtn.innerHTML = '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7"/></svg>';
-        nextBtn.onmouseover = function() { this.style.color = 'white'; this.style.transform = 'translateY(-50%) scale(1.1)'; };
-        nextBtn.onmouseout = function() { this.style.color = 'rgba(255,255,255,0.5)'; this.style.transform = 'translateY(-50%)'; };
-        nextBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex + 1); };
-        content.appendChild(nextBtn);
+      // Sliding container
+      html += '<div class="ig-slide-container" style="transform: translateX(-100vw);">';
+      html += renderPostContent(prevPost);
+      html += renderPostContent(post);
+      html += renderPostContent(nextPost);
+      html += '</div>';
+
+      // Scroll indicator
+      if (hasMultiple) {
+        html += '<div class="ig-scroll-indicator" style="position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 40; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,0.3);">';
+        html += '<span style="font-size: 11px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase;">Scroll</span>';
+        html += '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>';
+        html += '</div>';
       }
 
-      if (hasMultipleItems) {
-        // Vertical scrolling layout for carousel posts
-        const scrollContainer = document.createElement('div');
-        scrollContainer.className = 'ig-scrollbar-hide';
-        scrollContainer.style.cssText = 'height: 100%; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;';
+      modalElement.innerHTML = html;
 
-        const innerContainer = document.createElement('div');
-        innerContainer.style.cssText = 'max-width: 900px; margin: 0 auto; padding: 80px 16px 48px;';
+      // Attach event listeners
+      const closeBtn = modalElement.querySelector('button');
+      if (closeBtn) closeBtn.onclick = function(e) { e.stopPropagation(); closeModal(); };
 
-        // Caption at top
-        if (post.caption) {
-          const caption = document.createElement('div');
-          caption.style.cssText = 'margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;';
-          caption.innerHTML = '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0;">' + post.caption + '</p>';
-          innerContainer.appendChild(caption);
-        }
+      const prevBtn = modalElement.querySelector('.ig-nav-prev');
+      if (prevBtn) prevBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex - 1); };
 
-        // Images stacked vertically
-        const imagesContainer = document.createElement('div');
-        imagesContainer.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
+      const nextBtn = modalElement.querySelector('.ig-nav-next');
+      if (nextBtn) nextBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex + 1); };
 
-        items.forEach(function(item, idx) {
-          const imageWrapper = document.createElement('div');
-          imageWrapper.className = 'ig-carousel-image';
-          imageWrapper.style.cssText = 'width: 100%; animation-delay: ' + (idx * 100) + 'ms;';
-
-          if (item.media_type === 'VIDEO') {
-            const video = document.createElement('video');
-            video.src = item.media_url;
-            video.poster = item.thumbnail_url;
-            video.controls = true;
-            video.playsInline = true;
-            video.style.cssText = 'width: 100%; height: auto; display: block;';
-            imageWrapper.appendChild(video);
-          } else {
-            const img = document.createElement('img');
-            img.src = item.media_url;
-            img.alt = post.caption || 'Image ' + (idx + 1);
-            img.style.cssText = 'width: 100%; height: auto; display: block;';
-            imageWrapper.appendChild(img);
-          }
-
-          imagesContainer.appendChild(imageWrapper);
-        });
-
-        innerContainer.appendChild(imagesContainer);
-
-        // Footer info
-        const footer = document.createElement('div');
-        footer.style.cssText = 'padding: 48px 0; display: flex; align-items: center; justify-content: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;';
-
-        const date = new Date(post.timestamp);
-        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        footer.innerHTML = '<span>' + dateStr + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span><a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">View on Instagram</a>';
-        innerContainer.appendChild(footer);
-
-        scrollContainer.appendChild(innerContainer);
-        content.appendChild(scrollContainer);
-
-        // Scroll indicator
-        const scrollIndicator = document.createElement('div');
-        scrollIndicator.className = 'ig-scroll-indicator';
-        scrollIndicator.style.cssText = 'position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 40; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,0.3);';
-        scrollIndicator.innerHTML = '<span style="font-size: 11px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase;">Scroll</span><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>';
-        content.appendChild(scrollIndicator);
-
-      } else {
-        // Centered layout for single image/video
-        const centerContainer = document.createElement('div');
-        centerContainer.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;';
-
-        // Media container
-        const mediaContainer = document.createElement('div');
-        mediaContainer.style.cssText = 'position: relative; max-width: 900px; width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;';
-
-        const item = items[0];
-        if (item.media_type === 'VIDEO') {
-          const video = document.createElement('video');
-          video.src = item.media_url;
-          video.poster = item.thumbnail_url;
-          video.controls = true;
-          video.autoplay = true;
-          video.playsInline = true;
-          video.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain;';
-          mediaContainer.appendChild(video);
-        } else {
-          const img = document.createElement('img');
-          img.src = item.media_url;
-          img.alt = post.caption || 'Instagram post';
-          img.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain;';
-          mediaContainer.appendChild(img);
-        }
-
-        centerContainer.appendChild(mediaContainer);
-
-        // Caption
-        if (post.caption) {
-          const caption = document.createElement('div');
-          caption.style.cssText = 'margin-top: 24px; max-width: 600px; text-align: center; padding: 0 16px;';
-          caption.innerHTML = '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">' + post.caption + '</p>';
-          centerContainer.appendChild(caption);
-        }
-
-        // Date and Instagram link
-        const meta = document.createElement('div');
-        meta.style.cssText = 'margin-top: 16px; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;';
-
-        const date = new Date(post.timestamp);
-        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-        meta.innerHTML = '<span>' + dateStr + '</span><a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">View on Instagram</a>';
-        centerContainer.appendChild(meta);
-
-        content.appendChild(centerContainer);
-      }
-
-      // Replace modal content
-      modalElement.innerHTML = '';
-      modalElement.appendChild(content);
+      // Stop propagation on slide container
+      const slideContainer = modalElement.querySelector('.ig-slide-container');
+      if (slideContainer) slideContainer.onclick = function(e) { e.stopPropagation(); };
     }
 
     function handleKeyDown(e) {
-      if (selectedPostIndex === null) return;
-
-      const hasPrevPost = selectedPostIndex > 0;
-      const hasNextPost = selectedPostIndex < allPosts.length - 1;
+      if (selectedPostIndex === null || isSliding) return;
 
       switch (e.key) {
         case 'Escape':
@@ -474,30 +430,26 @@ export default function handler(req, res) {
           break;
         case 'ArrowLeft':
         case 'ArrowUp':
-          if (hasPrevPost) navigatePost(selectedPostIndex - 1);
+          if (selectedPostIndex > 0) navigatePost(selectedPostIndex - 1);
           break;
         case 'ArrowRight':
         case 'ArrowDown':
-          if (hasNextPost) navigatePost(selectedPostIndex + 1);
+          if (selectedPostIndex < allPosts.length - 1) navigatePost(selectedPostIndex + 1);
           break;
       }
     }
 
     function handleTouchEnd() {
-      if (selectedPostIndex === null) return;
+      if (selectedPostIndex === null || isSliding) return;
 
       const deltaX = touchStartX - touchEndX;
       const deltaY = touchStartY - touchEndY;
       const minSwipeDistance = 50;
 
-      const hasPrevPost = selectedPostIndex > 0;
-      const hasNextPost = selectedPostIndex < allPosts.length - 1;
-
-      // Only handle horizontal swipes for post navigation
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-        if (deltaX > 0 && hasNextPost) {
+        if (deltaX > 0 && selectedPostIndex < allPosts.length - 1) {
           navigatePost(selectedPostIndex + 1);
-        } else if (deltaX < 0 && hasPrevPost) {
+        } else if (deltaX < 0 && selectedPostIndex > 0) {
           navigatePost(selectedPostIndex - 1);
         }
       }
