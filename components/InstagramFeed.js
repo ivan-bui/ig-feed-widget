@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import PostModal from './PostModal';
 
 export default function InstagramFeed({ maxPosts = 50 }) {
   const [posts, setPosts] = useState([]);
@@ -7,6 +8,7 @@ export default function InstagramFeed({ maxPosts = 50 }) {
   const [error, setError] = useState(null);
   const [hasMore, setHasMore] = useState(true);
   const [nextCursor, setNextCursor] = useState(null);
+  const [selectedPostIndex, setSelectedPostIndex] = useState(null);
   const observerTarget = useRef(null);
 
   // maxPosts can be:
@@ -186,10 +188,36 @@ export default function InstagramFeed({ maxPosts = 50 }) {
     }
   };
 
+  // Render skeleton placeholder items
+  const renderSkeletonItems = () => {
+    const skeletonCount = 6; // Show 6 placeholder items
+    return Array.from({ length: skeletonCount }).map((_, index) => {
+      const style = layoutStyles[index % layoutStyles.length];
+      const positionClass = getPositionClass(style.position);
+
+      return (
+        <div key={`skeleton-${index}`} className="w-full inline-block">
+          <div
+            className={`
+              ${style.cssClass}
+              ${positionClass}
+              relative block overflow-hidden bg-gray-200 animate-pulse
+            `}
+          >
+            {/* Shimmer effect overlay */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent skeleton-shimmer" />
+          </div>
+        </div>
+      );
+    });
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+      <div className="w-full max-w-5xl mx-auto p-4 md:p-6">
+        <div className="instagram-feed-container">
+          {renderSkeletonItems()}
+        </div>
       </div>
     );
   }
@@ -213,14 +241,12 @@ export default function InstagramFeed({ maxPosts = 50 }) {
           
           return (
             <div key={post.id} className="w-full inline-block">
-              <a
-                href={post.permalink}
-                target="_blank"
-                rel="noopener noreferrer"
+              <button
+                onClick={() => setSelectedPostIndex(index)}
                 className={`
                   ${style.cssClass}
                   ${positionClass}
-                  group relative block overflow-hidden bg-gray-100 transition-all duration-300
+                  group relative block overflow-hidden bg-gray-100 transition-all duration-300 cursor-pointer
                 `}
               >
                 {/* Media Content */}
@@ -257,12 +283,12 @@ export default function InstagramFeed({ maxPosts = 50 }) {
                 {/* Hover Overlay with Caption */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="absolute bottom-0 left-0 right-0 p-3 md:p-6">
-                    <p className="text-white text-xs md:text-sm lg:text-base line-clamp-2 md:line-clamp-3">
+                    <p className="text-white text-xs md:text-sm lg:text-base line-clamp-2 md:line-clamp-3 text-left">
                       {post.caption}
                     </p>
                   </div>
                 </div>
-              </a>
+              </button>
             </div>
           );
         })}
@@ -277,6 +303,17 @@ export default function InstagramFeed({ maxPosts = 50 }) {
           </div>
         )}
       </div>
+
+      {/* Post Modal */}
+      {selectedPostIndex !== null && (
+        <PostModal
+          post={posts[selectedPostIndex]}
+          posts={posts}
+          currentIndex={selectedPostIndex}
+          onClose={() => setSelectedPostIndex(null)}
+          onNavigate={(newIndex) => setSelectedPostIndex(newIndex)}
+        />
+      )}
     </div>
   );
 }
