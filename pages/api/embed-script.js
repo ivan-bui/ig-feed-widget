@@ -30,6 +30,8 @@ export default function handler(req, res) {
     .ig-content.enter-left { transform: translateX(-100%); opacity: 0; transition: none; }
     .ig-content.enter-right { transform: translateX(100%); opacity: 0; transition: none; }
     .ig-content.center { transform: translateX(0); opacity: 1; }
+    .ig-video-overlay { transition: opacity 0.3s ease-out; }
+    .ig-video-overlay.hidden { opacity: 0; }
   \`;
   document.head.appendChild(styleSheet);
 
@@ -289,18 +291,27 @@ export default function handler(req, res) {
       counter.style.cssText = 'position:absolute;top:20px;left:20px;z-index:10;color:rgba(255,255,255,0.5);font-size:14px;';
       modalElement.appendChild(counter);
 
-      // Nav buttons
+      // Nav buttons - positioned at bottom on mobile, centered on desktop
+      const isMobile = window.innerWidth < 768;
       const prevBtn = document.createElement('button');
       prevBtn.className = 'ig-nav-prev';
-      prevBtn.style.cssText = 'position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:12px;display:none;';
-      prevBtn.innerHTML = '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7"/></svg>';
+      prevBtn.style.cssText = isMobile
+        ? 'position:absolute;left:16px;bottom:24px;z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;'
+        : 'position:absolute;left:24px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;';
+      prevBtn.innerHTML = isMobile
+        ? '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>'
+        : '<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7"/></svg>';
       prevBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex - 1); };
       modalElement.appendChild(prevBtn);
 
       const nextBtn = document.createElement('button');
       nextBtn.className = 'ig-nav-next';
-      nextBtn.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:12px;display:none;';
-      nextBtn.innerHTML = '<svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7"/></svg>';
+      nextBtn.style.cssText = isMobile
+        ? 'position:absolute;right:16px;bottom:24px;z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;'
+        : 'position:absolute;right:24px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;';
+      nextBtn.innerHTML = isMobile
+        ? '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>'
+        : '<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7"/></svg>';
       nextBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex + 1); };
       modalElement.appendChild(nextBtn);
 
@@ -322,6 +333,65 @@ export default function handler(req, res) {
       updateModalContent();
     }
 
+    function createVideoPlayer(src, poster, style) {
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = 'position:relative;cursor:pointer;' + style;
+
+      const video = document.createElement('video');
+      video.src = src;
+      video.poster = poster || '';
+      video.playsInline = true;
+      video.style.cssText = style;
+
+      const overlay = document.createElement('div');
+      overlay.className = 'ig-video-overlay';
+      overlay.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;';
+
+      const playBtn = document.createElement('div');
+      playBtn.style.cssText = 'width:64px;height:64px;border-radius:50%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;';
+      playBtn.innerHTML = '<svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+      overlay.appendChild(playBtn);
+
+      let hideTimeout = null;
+
+      function hideOverlayAfterDelay() {
+        if (hideTimeout) clearTimeout(hideTimeout);
+        if (!video.paused) {
+          hideTimeout = setTimeout(function() { overlay.classList.add('hidden'); }, 800);
+        }
+      }
+
+      function showOverlay() {
+        overlay.classList.remove('hidden');
+        hideOverlayAfterDelay();
+      }
+
+      wrapper.onclick = function(e) {
+        e.stopPropagation();
+        if (video.paused) {
+          video.play();
+          playBtn.innerHTML = '<svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/></svg>';
+          showOverlay();
+        } else {
+          video.pause();
+          playBtn.innerHTML = '<svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+          overlay.classList.remove('hidden');
+        }
+      };
+
+      wrapper.onmousemove = showOverlay;
+      wrapper.ontouchstart = showOverlay;
+
+      video.onended = function() {
+        playBtn.innerHTML = '<svg width="32" height="32" fill="white" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>';
+        overlay.classList.remove('hidden');
+      };
+
+      wrapper.appendChild(video);
+      wrapper.appendChild(overlay);
+      return wrapper;
+    }
+
     function updateModalContent() {
       const post = allPosts[displayedIndex];
       const items = getCarouselItems(post);
@@ -338,47 +408,83 @@ export default function handler(req, res) {
       // Update scroll indicator
       modalElement.querySelector('.ig-scroll-indicator').style.display = hasMultiple ? 'flex' : 'none';
 
-      // Build content HTML
+      // Build content
       const content = modalElement.querySelector('.ig-content');
-      let html = '';
+      content.innerHTML = '';
 
       if (hasMultiple) {
-        html = '<div class="ig-scrollbar-hide" style="height:100%;overflow-y:auto;">';
-        html += '<div style="max-width:900px;margin:0 auto;padding:80px 16px 48px;">';
+        const scrollContainer = document.createElement('div');
+        scrollContainer.className = 'ig-scrollbar-hide';
+        scrollContainer.style.cssText = 'height:100%;overflow-y:auto;';
+
+        const inner = document.createElement('div');
+        inner.style.cssText = 'max-width:900px;margin:0 auto;padding:80px 16px 48px;';
+
         if (post.caption) {
-          html += '<div style="margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;"><p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p></div>';
+          const captionDiv = document.createElement('div');
+          captionDiv.style.cssText = 'margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;';
+          captionDiv.innerHTML = '<p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p>';
+          inner.appendChild(captionDiv);
         }
-        html += '<div style="display:flex;flex-direction:column;gap:16px;">';
+
+        const mediaContainer = document.createElement('div');
+        mediaContainer.style.cssText = 'display:flex;flex-direction:column;gap:16px;';
+
         items.forEach(function(item) {
           if (item.media_type === 'VIDEO') {
-            html += '<video src="' + item.media_url + '" poster="' + (item.thumbnail_url || '') + '" controls playsinline style="width:100%;height:auto;"></video>';
+            mediaContainer.appendChild(createVideoPlayer(item.media_url, item.thumbnail_url, 'width:100%;height:auto;'));
           } else {
-            html += '<img src="' + item.media_url + '" alt="" style="width:100%;height:auto;display:block;" />';
+            const img = document.createElement('img');
+            img.src = item.media_url;
+            img.alt = '';
+            img.style.cssText = 'width:100%;height:auto;display:block;';
+            mediaContainer.appendChild(img);
           }
         });
-        html += '</div>';
-        html += '<div style="padding:48px 0;display:flex;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;">';
-        html += '<span>' + date + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
-        html += '</div></div></div>';
+
+        inner.appendChild(mediaContainer);
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding:48px 0;display:flex;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;';
+        footer.innerHTML = '<span>' + date + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
+        inner.appendChild(footer);
+
+        scrollContainer.appendChild(inner);
+        content.appendChild(scrollContainer);
       } else {
         const item = items[0];
-        html = '<div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;">';
-        html += '<div style="max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;">';
-        if (item.media_type === 'VIDEO') {
-          html += '<video src="' + item.media_url + '" poster="' + (item.thumbnail_url || '') + '" controls autoplay playsinline style="max-width:100%;max-height:70vh;object-fit:contain;"></video>';
-        } else {
-          html += '<img src="' + item.media_url + '" alt="" style="max-width:100%;max-height:70vh;object-fit:contain;" />';
-        }
-        html += '</div>';
-        if (post.caption) {
-          html += '<div style="margin-top:24px;max-width:600px;text-align:center;padding:0 16px;"><p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p></div>';
-        }
-        html += '<div style="margin-top:16px;display:flex;align-items:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;">';
-        html += '<span>' + date + '</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
-        html += '</div></div>';
-      }
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
 
-      content.innerHTML = html;
+        const mediaWrapper = document.createElement('div');
+        mediaWrapper.style.cssText = 'max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;';
+
+        if (item.media_type === 'VIDEO') {
+          mediaWrapper.appendChild(createVideoPlayer(item.media_url, item.thumbnail_url, 'max-width:100%;max-height:70vh;object-fit:contain;'));
+        } else {
+          const img = document.createElement('img');
+          img.src = item.media_url;
+          img.alt = '';
+          img.style.cssText = 'max-width:100%;max-height:70vh;object-fit:contain;';
+          mediaWrapper.appendChild(img);
+        }
+
+        wrapper.appendChild(mediaWrapper);
+
+        if (post.caption) {
+          const captionDiv = document.createElement('div');
+          captionDiv.style.cssText = 'margin-top:24px;max-width:600px;text-align:center;padding:0 16px;';
+          captionDiv.innerHTML = '<p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p>';
+          wrapper.appendChild(captionDiv);
+        }
+
+        const footer = document.createElement('div');
+        footer.style.cssText = 'margin-top:16px;display:flex;align-items:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;';
+        footer.innerHTML = '<span>' + date + '</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
+        wrapper.appendChild(footer);
+
+        content.appendChild(wrapper);
+      }
     }
 
     function handleKeyDown(e) {

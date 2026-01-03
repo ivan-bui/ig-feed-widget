@@ -1,5 +1,91 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+// Video player with auto-hiding controls
+function VideoPlayer({ src, poster, className }) {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showControls, setShowControls] = useState(true);
+  const hideTimeoutRef = useRef(null);
+
+  const hideControlsAfterDelay = useCallback(() => {
+    if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    if (isPlaying) {
+      hideTimeoutRef.current = setTimeout(() => setShowControls(false), 800);
+    }
+  }, [isPlaying]);
+
+  const handleVideoClick = useCallback((e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (video.paused) {
+      video.play();
+      setIsPlaying(true);
+      setShowControls(true);
+      hideControlsAfterDelay();
+    } else {
+      video.pause();
+      setIsPlaying(false);
+      setShowControls(true);
+    }
+  }, [hideControlsAfterDelay]);
+
+  const handleInteraction = useCallback(() => {
+    setShowControls(true);
+    hideControlsAfterDelay();
+  }, [hideControlsAfterDelay]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onEnded = () => {
+      setIsPlaying(false);
+      setShowControls(true);
+    };
+
+    video.addEventListener('ended', onEnded);
+    return () => {
+      video.removeEventListener('ended', onEnded);
+      if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
+    };
+  }, []);
+
+  return (
+    <div
+      className="relative cursor-pointer"
+      onClick={handleVideoClick}
+      onMouseMove={handleInteraction}
+      onTouchStart={handleInteraction}
+    >
+      <video
+        ref={videoRef}
+        src={src}
+        poster={poster}
+        playsInline
+        className={className}
+      />
+      <div
+        className={`absolute inset-0 flex items-center justify-center transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`}
+        style={{ pointerEvents: 'none' }}
+      >
+        <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-black/50 flex items-center justify-center">
+          {isPlaying ? (
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+            </svg>
+          ) : (
+            <svg className="w-8 h-8 md:w-10 md:h-10 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PostModal({ post, posts, currentIndex, onClose, onNavigate }) {
   const [isClosing, setIsClosing] = useState(false);
   const [displayedPost, setDisplayedPost] = useState(post);
@@ -184,12 +270,10 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
 
     if (isVideo) {
       return (
-        <video
+        <VideoPlayer
           key={item.id || index}
           src={item.media_url}
           poster={item.thumbnail_url}
-          controls
-          playsInline
           className="w-full h-auto object-contain"
         />
       );
@@ -251,28 +335,28 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         {displayedIndex + 1} / {posts.length}
       </div>
 
-      {/* Previous post navigation */}
+      {/* Previous post navigation - bottom left on mobile, centered left on desktop */}
       {hasPrevPost && (
         <button
           onClick={(e) => { e.stopPropagation(); handleNavigate(currentIndex - 1); }}
-          className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-50 p-3 text-white/50 hover:text-white transition-all hover:scale-110"
+          className="absolute left-4 bottom-6 md:bottom-auto md:left-6 md:top-1/2 md:-translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-all hover:scale-110"
           aria-label="Previous post"
         >
-          <svg className="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M15 19l-7-7 7-7" />
+          <svg className="w-6 h-6 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
       )}
 
-      {/* Next post navigation */}
+      {/* Next post navigation - bottom right on mobile, centered right on desktop */}
       {hasNextPost && (
         <button
           onClick={(e) => { e.stopPropagation(); handleNavigate(currentIndex + 1); }}
-          className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-50 p-3 text-white/50 hover:text-white transition-all hover:scale-110"
+          className="absolute right-4 bottom-6 md:bottom-auto md:right-6 md:top-1/2 md:-translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-all hover:scale-110"
           aria-label="Next post"
         >
-          <svg className="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5l7 7-7 7" />
+          <svg className="w-6 h-6 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       )}
