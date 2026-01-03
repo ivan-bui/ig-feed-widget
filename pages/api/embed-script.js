@@ -465,7 +465,8 @@ export default function handler(req, res) {
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 16px 160px;';
+        var singlePostTopPadding = window.innerWidth < 768 ? '160px' : '112px';
+        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:' + singlePostTopPadding + ' 16px 160px;';
 
         const mediaWrapper = document.createElement('div');
         mediaWrapper.style.cssText = 'max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;';
