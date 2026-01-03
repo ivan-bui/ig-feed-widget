@@ -337,31 +337,6 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         {displayedIndex + 1} / {posts.length}
       </div>
 
-      {/* Previous post navigation - bottom left on mobile, centered left on desktop */}
-      {hasPrevPost && (
-        <button
-          onClick={(e) => { e.stopPropagation(); handleNavigate(currentIndex - 1); }}
-          className="absolute left-4 bottom-6 md:bottom-auto md:left-6 md:top-1/2 md:-translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-all hover:scale-110"
-          aria-label="Previous post"
-        >
-          <svg className="w-6 h-6 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      )}
-
-      {/* Next post navigation - bottom right on mobile, centered right on desktop */}
-      {hasNextPost && (
-        <button
-          onClick={(e) => { e.stopPropagation(); handleNavigate(currentIndex + 1); }}
-          className="absolute right-4 bottom-6 md:bottom-auto md:right-6 md:top-1/2 md:-translate-y-1/2 z-50 p-2 text-white/50 hover:text-white transition-all hover:scale-110"
-          aria-label="Next post"
-        >
-          <svg className="w-6 h-6 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      )}
 
       {/* Main content with slide animation */}
       <div
@@ -412,8 +387,8 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
             {displayedPost.caption && (
               <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
                 <div
-                  className="pt-16 pb-6 md:pb-8 px-4 md:px-16"
-                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%)' }}
+                  className="pt-24 pb-6 md:pb-8 px-4 md:px-16"
+                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0) 100%)' }}
                 >
                   <div className="max-w-2xl mx-auto">
                     <p className="text-white/90 text-sm md:text-base font-light leading-relaxed line-clamp-3 md:line-clamp-4">
@@ -426,37 +401,47 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
           </>
         ) : (
           /* Centered layout for single image/video posts */
-          <div className="h-full flex flex-col items-center justify-center p-4 md:p-16">
-            <div className="relative max-w-5xl w-full max-h-[70vh] md:max-h-[75vh] flex items-center justify-center">
-              {renderMediaItem(carouselItems[0], 0)}
+          <>
+            <div className="h-full flex flex-col items-center justify-center p-4 pb-40 md:p-16 md:pb-48">
+              <div className="relative max-w-5xl w-full max-h-[70vh] md:max-h-[75vh] flex items-center justify-center">
+                {renderMediaItem(carouselItems[0], 0)}
+              </div>
+
+              <div className="mt-4 flex items-center gap-4 text-white/40 text-xs md:text-sm">
+                <span>
+                  {new Date(displayedPost.timestamp).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+                <a
+                  href={displayedPost.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-white/70 transition-colors underline underline-offset-2"
+                >
+                  View on Instagram
+                </a>
+              </div>
             </div>
 
+            {/* Fixed caption at bottom with gradient */}
             {displayedPost.caption && (
-              <div className="mt-6 md:mt-8 max-w-2xl text-center px-4">
-                <p className="text-white/80 text-sm md:text-base font-light leading-relaxed line-clamp-4 md:line-clamp-none">
-                  {displayedPost.caption}
-                </p>
+              <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+                <div
+                  className="pt-24 pb-6 md:pb-8 px-4 md:px-16"
+                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0) 100%)' }}
+                >
+                  <div className="max-w-2xl mx-auto">
+                    <p className="text-white/90 text-sm md:text-base font-light leading-relaxed line-clamp-3 md:line-clamp-4">
+                      {displayedPost.caption}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
-
-            <div className="mt-4 flex items-center gap-4 text-white/40 text-xs md:text-sm">
-              <span>
-                {new Date(displayedPost.timestamp).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
-              </span>
-              <a
-                href={displayedPost.permalink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-white/70 transition-colors underline underline-offset-2"
-              >
-                View on Instagram
-              </a>
-            </div>
-          </div>
+          </>
         )}
       </div>
 

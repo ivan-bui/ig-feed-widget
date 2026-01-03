@@ -291,30 +291,6 @@ export default function handler(req, res) {
       counter.style.cssText = 'position:absolute;top:20px;left:20px;z-index:10;color:rgba(255,255,255,0.5);font-size:14px;';
       modalElement.appendChild(counter);
 
-      // Nav buttons - positioned at bottom on mobile, centered on desktop
-      const isMobile = window.innerWidth < 768;
-      const prevBtn = document.createElement('button');
-      prevBtn.className = 'ig-nav-prev';
-      prevBtn.style.cssText = isMobile
-        ? 'position:absolute;left:16px;bottom:24px;z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;'
-        : 'position:absolute;left:24px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;';
-      prevBtn.innerHTML = isMobile
-        ? '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7"/></svg>'
-        : '<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 19l-7-7 7-7"/></svg>';
-      prevBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex - 1); };
-      modalElement.appendChild(prevBtn);
-
-      const nextBtn = document.createElement('button');
-      nextBtn.className = 'ig-nav-next';
-      nextBtn.style.cssText = isMobile
-        ? 'position:absolute;right:16px;bottom:24px;z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;'
-        : 'position:absolute;right:24px;top:50%;transform:translateY(-50%);z-index:10;background:none;border:none;color:rgba(255,255,255,0.5);cursor:pointer;padding:8px;display:none;';
-      nextBtn.innerHTML = isMobile
-        ? '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7"/></svg>'
-        : '<svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 5l7 7-7 7"/></svg>';
-      nextBtn.onclick = function(e) { e.stopPropagation(); navigatePost(selectedPostIndex + 1); };
-      modalElement.appendChild(nextBtn);
-
       // Content container
       const content = document.createElement('div');
       content.className = 'ig-content center';
@@ -401,10 +377,6 @@ export default function handler(req, res) {
       // Update counter
       modalElement.querySelector('.ig-counter').textContent = (displayedIndex + 1) + ' / ' + allPosts.length;
 
-      // Update nav visibility
-      modalElement.querySelector('.ig-nav-prev').style.display = selectedPostIndex > 0 ? 'block' : 'none';
-      modalElement.querySelector('.ig-nav-next').style.display = selectedPostIndex < allPosts.length - 1 ? 'block' : 'none';
-
       // Hide scroll indicator (caption is now at bottom)
       modalElement.querySelector('.ig-scroll-indicator').style.display = 'none';
 
@@ -454,13 +426,13 @@ export default function handler(req, res) {
           const fixedCaption = document.createElement('div');
           fixedCaption.className = 'ig-fixed-caption';
           fixedCaption.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:10;pointer-events:none;';
-          fixedCaption.innerHTML = '<div style="padding:64px 16px 24px;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);"><div style="max-width:600px;margin:0 auto;"><p style="color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + post.caption + '</p></div></div>';
+          fixedCaption.innerHTML = '<div style="padding:96px 16px 24px;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0) 100%);"><div style="max-width:600px;margin:0 auto;"><p style="color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + post.caption + '</p></div></div>';
           modalElement.appendChild(fixedCaption);
         }
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;';
+        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;padding-bottom:160px;';
 
         const mediaWrapper = document.createElement('div');
         mediaWrapper.style.cssText = 'max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;';
@@ -477,19 +449,21 @@ export default function handler(req, res) {
 
         wrapper.appendChild(mediaWrapper);
 
-        if (post.caption) {
-          const captionDiv = document.createElement('div');
-          captionDiv.style.cssText = 'margin-top:24px;max-width:600px;text-align:center;padding:0 16px;';
-          captionDiv.innerHTML = '<p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p>';
-          wrapper.appendChild(captionDiv);
-        }
-
         const footer = document.createElement('div');
         footer.style.cssText = 'margin-top:16px;display:flex;align-items:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;';
         footer.innerHTML = '<span>' + date + '</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
         wrapper.appendChild(footer);
 
         content.appendChild(wrapper);
+
+        // Add fixed caption at bottom with gradient
+        if (post.caption) {
+          const fixedCaption = document.createElement('div');
+          fixedCaption.className = 'ig-fixed-caption';
+          fixedCaption.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:10;pointer-events:none;';
+          fixedCaption.innerHTML = '<div style="padding:96px 16px 24px;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.5) 60%, rgba(0,0,0,0.2) 80%, rgba(0,0,0,0) 100%);"><div style="max-width:600px;margin:0 auto;"><p style="color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + post.caption + '</p></div></div>';
+          modalElement.appendChild(fixedCaption);
+        }
       }
     }
 
