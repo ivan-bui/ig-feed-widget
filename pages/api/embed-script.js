@@ -198,11 +198,24 @@ export default function handler(req, res) {
       });
     }
 
+    var preventBodyScrollHandler = null;
+
     function openModal(index) {
       selectedPostIndex = index;
       displayedIndex = index;
       isAnimating = false;
       document.body.style.overflow = 'hidden';
+
+      // Prevent touchmove on body to stop page scrolling behind modal
+      preventBodyScrollHandler = function(e) {
+        // Allow scrolling inside scroll containers
+        var scrollContainer = modalElement && modalElement.querySelector('.ig-scrollbar-hide');
+        if (scrollContainer && scrollContainer.contains(e.target)) {
+          return;
+        }
+        e.preventDefault();
+      };
+      document.addEventListener('touchmove', preventBodyScrollHandler, { passive: false });
 
       // Preload current and adjacent
       preloadPost(allPosts[index]);
@@ -221,6 +234,10 @@ export default function handler(req, res) {
         selectedPostIndex = null;
         displayedIndex = null;
         document.body.style.overflow = '';
+        if (preventBodyScrollHandler) {
+          document.removeEventListener('touchmove', preventBodyScrollHandler);
+          preventBodyScrollHandler = null;
+        }
       }, 300);
     }
 
@@ -391,7 +408,7 @@ export default function handler(req, res) {
       if (hasMultiple) {
         const scrollContainer = document.createElement('div');
         scrollContainer.className = 'ig-scrollbar-hide';
-        scrollContainer.style.cssText = 'height:100%;overflow-y:auto;';
+        scrollContainer.style.cssText = 'height:100%;overflow-y:auto;overscroll-behavior:contain;';
 
         const inner = document.createElement('div');
         inner.style.cssText = 'max-width:900px;margin:0 auto;padding:64px 16px 160px;';

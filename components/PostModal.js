@@ -260,10 +260,25 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleClose, handleNavigate, hasPrevPost, hasNextPost, currentIndex]);
 
-  // Lock body scroll
+  // Lock body scroll and prevent touch scroll on body
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+
+    // Prevent touchmove on body to stop page scrolling behind modal
+    const preventBodyScroll = (e) => {
+      // Allow scrolling inside the scroll container for carousel posts
+      if (scrollContainerRef.current && scrollContainerRef.current.contains(e.target)) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    document.addEventListener('touchmove', preventBodyScroll, { passive: false });
+
+    return () => {
+      document.body.style.overflow = '';
+      document.removeEventListener('touchmove', preventBodyScroll);
+    };
   }, []);
 
   // Render media item
@@ -349,7 +364,7 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
             <div
               ref={scrollContainerRef}
               className="h-full overflow-y-auto scrollbar-hide"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', overscrollBehavior: 'contain' }}
             >
               <div className="max-w-4xl mx-auto px-4 md:px-16 pt-16 md:pt-20 pb-40 md:pb-48">
                 <div className="space-y-4 md:space-y-6">
