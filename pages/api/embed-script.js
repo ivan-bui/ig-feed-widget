@@ -465,7 +465,7 @@ export default function handler(req, res) {
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
-        var singlePostTopPadding = window.innerWidth < 768 ? '144px' : '112px';
+        var singlePostTopPadding = window.innerWidth < 768 ? '128px' : '112px';
         wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:' + singlePostTopPadding + ' 16px 160px;';
 
         const mediaWrapper = document.createElement('div');

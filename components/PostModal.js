@@ -431,7 +431,7 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         ) : (
           /* Centered layout for single image/video posts */
           <>
-            <div className="h-full flex flex-col items-center justify-center pt-36 px-4 pb-40 md:pt-28 md:px-16 md:pb-48">
+            <div className="h-full flex flex-col items-center justify-center pt-32 px-4 pb-40 md:pt-28 md:px-16 md:pb-48">
               <div className="relative max-w-5xl w-full max-h-[70vh] md:max-h-[75vh] flex items-center justify-center">
                 {renderMediaItem(carouselItems[0], 0)}
               </div>
