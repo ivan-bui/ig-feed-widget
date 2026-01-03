@@ -465,7 +465,7 @@ export default function handler(req, res) {
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;padding-bottom:160px;';
+        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 16px 160px;';
 
         const mediaWrapper = document.createElement('div');
         mediaWrapper.style.cssText = 'max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;';
