@@ -13,9 +13,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Instagram credentials not configured' });
     }
     
-    // Build URL with optional cursor
-    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp';
-    let apiUrl = `https://graph.instagram.com/v24.0/${userId}/media?fields=${fields}&access_token=${accessToken}&limit=${limit}`;
+    // Build URL with optional cursor - includes children for carousel support
+    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,username,like_count,comments_count,children{id,media_type,media_url,thumbnail_url}';
+    let apiUrl = `https://graph.instagram.com/v21.0/${userId}/media?fields=${fields}&access_token=${accessToken}&limit=${limit}`;
     
     if (after) {
       apiUrl += `&after=${after}`;
