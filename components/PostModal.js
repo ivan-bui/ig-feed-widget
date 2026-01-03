@@ -10,7 +10,7 @@ function VideoPlayer({ src, poster, className }) {
   const hideControlsAfterDelay = useCallback(() => {
     if (hideTimeoutRef.current) clearTimeout(hideTimeoutRef.current);
     if (isPlaying) {
-      hideTimeoutRef.current = setTimeout(() => setShowControls(false), 800);
+      hideTimeoutRef.current = setTimeout(() => setShowControls(false), 400);
     }
   }, [isPlaying]);
 
@@ -225,9 +225,11 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
   const handleTouchEnd = useCallback(() => {
     const deltaX = touchStartX.current - touchEndX.current;
     const deltaY = touchStartY.current - touchEndY.current;
-    const minSwipeDistance = 50;
+    const minSwipeDistance = 100; // Increased from 50 for more intentional swipes
+    const swipeRatio = 2.5; // Horizontal distance must be 2.5x vertical distance
 
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+    // Require more intentional horizontal swipe
+    if (Math.abs(deltaX) > Math.abs(deltaY) * swipeRatio && Math.abs(deltaX) > minSwipeDistance) {
       if (deltaX > 0 && hasNextPost) {
         handleNavigate(currentIndex + 1);
       } else if (deltaX < 0 && hasPrevPost) {

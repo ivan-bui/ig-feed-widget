@@ -357,7 +357,7 @@ export default function handler(req, res) {
       function hideOverlayAfterDelay() {
         if (hideTimeout) clearTimeout(hideTimeout);
         if (!video.paused) {
-          hideTimeout = setTimeout(function() { overlay.classList.add('hidden'); }, 800);
+          hideTimeout = setTimeout(function() { overlay.classList.add('hidden'); }, 400);
         }
       }
 
@@ -498,7 +498,11 @@ export default function handler(req, res) {
       if (selectedPostIndex === null || isAnimating) return;
       const deltaX = touchStartX - touchEndX;
       const deltaY = touchStartY - touchEndY;
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      var minSwipeDistance = 100; // Increased from 50 for more intentional swipes
+      var swipeRatio = 2.5; // Horizontal distance must be 2.5x vertical distance
+
+      // Require more intentional horizontal swipe
+      if (Math.abs(deltaX) > Math.abs(deltaY) * swipeRatio && Math.abs(deltaX) > minSwipeDistance) {
         if (deltaX > 0 && selectedPostIndex < allPosts.length - 1) navigatePost(selectedPostIndex + 1);
         else if (deltaX < 0 && selectedPostIndex > 0) navigatePost(selectedPostIndex - 1);
       }
