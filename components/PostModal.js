@@ -142,9 +142,12 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         isClosing ? 'opacity-0' : 'opacity-100'
       }`}
       onClick={handleClose}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/95 backdrop-blur-sm pointer-events-none" />
 
       {/* Close button */}
       <button
@@ -204,9 +207,6 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
             : 'opacity-100 translate-x-0'
         }`}
         onClick={(e) => e.stopPropagation()}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
       >
         {hasMultipleItems ? (
           /* Vertical scrolling layout for carousel posts */
