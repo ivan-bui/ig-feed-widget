@@ -2,7 +2,37 @@
 
 import { InstagramPost } from '@/types/instagram';
 import Image from 'next/image';
-import { Play } from 'lucide-react';
+
+// SVG Icons as components
+const PlayIcon = () => (
+  <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z"/>
+  </svg>
+);
+
+const PlayIconSmall = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z"/>
+  </svg>
+);
+
+const GridIcon = () => (
+  <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const GridIconSmall = () => (
+  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
 
 interface PostGridProps {
   posts: InstagramPost[];
@@ -56,17 +86,12 @@ const PostCard = ({
         <div className="opacity-0 group-hover:opacity-100 transition-opacity">
           {isVideo && (
             <div className="flex items-center gap-2 text-white">
-              <Play className="w-12 h-12" fill="currentColor" />
+              <PlayIcon />
             </div>
           )}
           {isCarousel && (
             <div className="flex items-center gap-2 text-white">
-              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-              </svg>
+              <GridIcon />
             </div>
           )}
         </div>
@@ -76,17 +101,12 @@ const PostCard = ({
       <div className="absolute top-3 right-3">
         {isVideo && (
           <div className="bg-black/60 rounded-full p-1.5">
-            <Play className="w-4 h-4 text-white" fill="currentColor" />
+            <PlayIconSmall />
           </div>
         )}
         {isCarousel && (
           <div className="bg-black/60 rounded-full p-1.5">
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-            </svg>
+            <GridIconSmall />
           </div>
         )}
       </div>

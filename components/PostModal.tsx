@@ -3,7 +3,43 @@
 import { useState, useEffect } from 'react';
 import { InstagramPost } from '@/types/instagram';
 import Image from 'next/image';
-import { X, ChevronLeft, ChevronRight, Heart, MessageCircle, Calendar } from 'lucide-react';
+
+// SVG Icons as components
+const XIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+  </svg>
+);
+
+const ChevronLeftIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+  </svg>
+);
+
+const ChevronRightIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+  </svg>
+);
+
+const HeartIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+  </svg>
+);
+
+const MessageCircleIcon = ({ className = "w-5 h-5" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z"/>
+  </svg>
+);
+
+const CalendarIcon = ({ className = "w-3 h-3" }: { className?: string }) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 24 24">
+    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+  </svg>
+);
 
 interface PostModalProps {
   post: InstagramPost;
@@ -118,7 +154,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
         className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
         aria-label="Close"
       >
-        <X className="w-6 h-6 text-white" />
+        <XIcon className="w-6 h-6 text-white" />
       </button>
 
       {/* Main content */}
@@ -138,7 +174,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
                 className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 aria-label="Previous slide"
               >
-                <ChevronLeft className="w-6 h-6 text-white" />
+                <ChevronLeftIcon className="w-6 h-6 text-white" />
               </button>
 
               <button
@@ -146,7 +182,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
                 className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 aria-label="Next slide"
               >
-                <ChevronRight className="w-6 h-6 text-white" />
+                <ChevronRightIcon className="w-6 h-6 text-white" />
               </button>
 
               {/* Slide indicators */}
@@ -183,7 +219,7 @@ export default function PostModal({ post, onClose }: PostModalProps) {
                   {post.username || 'Instagram'}
                 </p>
                 <div className="flex items-center gap-1 text-xs text-gray-500">
-                  <Calendar className="w-3 h-3" />
+                  <CalendarIcon className="w-3 h-3" />
                   <span>{formatDate(post.timestamp)}</span>
                 </div>
               </div>
@@ -204,13 +240,13 @@ export default function PostModal({ post, onClose }: PostModalProps) {
             <div className="flex items-center gap-4 pt-4 border-t border-gray-200">
               {post.like_count !== undefined && (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Heart className="w-5 h-5" />
+                  <HeartIcon className="w-5 h-5" />
                   <span className="font-medium">{post.like_count.toLocaleString()}</span>
                 </div>
               )}
               {post.comments_count !== undefined && (
                 <div className="flex items-center gap-2 text-gray-600">
-                  <MessageCircle className="w-5 h-5" />
+                  <MessageCircleIcon className="w-5 h-5" />
                   <span className="font-medium">{post.comments_count.toLocaleString()}</span>
                 </div>
               )}
