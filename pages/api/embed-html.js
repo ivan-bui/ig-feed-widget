@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     }
     
     // Build URL with optional cursor
-    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp';
+    const fields = 'id,caption,media_type,media_url,permalink,thumbnail_url,timestamp,children{media_url,media_type,thumbnail_url}';
     let apiUrl = `https://graph.instagram.com/v24.0/${userId}/media?fields=${fields}&access_token=${accessToken}&limit=${limit}`;
     
     if (after) {
