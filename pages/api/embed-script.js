@@ -199,11 +199,19 @@ export default function handler(req, res) {
     }
 
     var preventBodyScrollHandler = null;
+    var savedScrollY = 0;
 
     function openModal(index) {
       selectedPostIndex = index;
       displayedIndex = index;
       isAnimating = false;
+
+      // Store current scroll position and lock body
+      savedScrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = '-' + savedScrollY + 'px';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
 
       // Prevent touchmove on body to stop page scrolling behind modal
@@ -233,7 +241,15 @@ export default function handler(req, res) {
         modalElement = null;
         selectedPostIndex = null;
         displayedIndex = null;
+
+        // Restore body styles and scroll position
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
         document.body.style.overflow = '';
+        window.scrollTo(0, savedScrollY);
+
         if (preventBodyScrollHandler) {
           document.removeEventListener('touchmove', preventBodyScrollHandler);
           preventBodyScrollHandler = null;
@@ -495,7 +511,7 @@ export default function handler(req, res) {
       if (selectedPostIndex === null || isAnimating) return;
       const deltaX = touchStartX - touchEndX;
       const deltaY = touchStartY - touchEndY;
-      var minSwipeDistance = 100; // Increased from 50 for more intentional swipes
+      var minSwipeDistance = 70; // Reduced for easier navigation
       var swipeRatio = 2.5; // Horizontal distance must be 2.5x vertical distance
 
       // Require more intentional horizontal swipe

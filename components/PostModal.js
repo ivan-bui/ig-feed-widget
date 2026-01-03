@@ -225,7 +225,7 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
   const handleTouchEnd = useCallback(() => {
     const deltaX = touchStartX.current - touchEndX.current;
     const deltaY = touchStartY.current - touchEndY.current;
-    const minSwipeDistance = 100; // Increased from 50 for more intentional swipes
+    const minSwipeDistance = 70; // Reduced for easier navigation
     const swipeRatio = 2.5; // Horizontal distance must be 2.5x vertical distance
 
     // Require more intentional horizontal swipe
@@ -262,6 +262,14 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
 
   // Lock body scroll and prevent touch scroll on body
   useEffect(() => {
+    // Store current scroll position
+    const scrollY = window.scrollY;
+
+    // Lock body in place to prevent background scrolling
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
     document.body.style.overflow = 'hidden';
 
     // Prevent touchmove on body to stop page scrolling behind modal
@@ -276,7 +284,13 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
     document.addEventListener('touchmove', preventBodyScroll, { passive: false });
 
     return () => {
+      // Restore body styles and scroll position
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+      window.scrollTo(0, scrollY);
       document.removeEventListener('touchmove', preventBodyScroll);
     };
   }, []);
