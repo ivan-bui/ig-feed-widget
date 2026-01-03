@@ -23,11 +23,17 @@ export default function handler(req, res) {
     @keyframes igModalFadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes igModalFadeOut { from { opacity: 1; } to { opacity: 0; } }
     @keyframes igModalSlideIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+    @keyframes igImageFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes igBounce { 0%, 100% { transform: translateY(0) translateX(-50%); } 50% { transform: translateY(-10px) translateX(-50%); } }
     .ig-modal-overlay { animation: igModalFadeIn 0.3s ease-out forwards; }
     .ig-modal-overlay.closing { animation: igModalFadeOut 0.3s ease-out forwards; }
     .ig-modal-content { animation: igModalSlideIn 0.3s ease-out forwards; }
     .ig-modal-transitioning-next { opacity: 0; transform: translateX(20px); }
     .ig-modal-transitioning-prev { opacity: 0; transform: translateX(-20px); }
+    .ig-carousel-image { animation: igImageFadeIn 0.4s ease-out forwards; opacity: 0; }
+    .ig-scroll-indicator { animation: igBounce 2s ease-in-out infinite; }
+    .ig-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    .ig-scrollbar-hide::-webkit-scrollbar { display: none; }
   \`;
   document.head.appendChild(styleSheet);
 
@@ -44,7 +50,6 @@ export default function handler(req, res) {
     let allPosts = [];
     let selectedPostIndex = null;
     let modalElement = null;
-    let carouselIndex = 0;
 
     // Touch handling
     let touchStartX = 0;
@@ -222,7 +227,6 @@ export default function handler(req, res) {
     // Modal functions
     function openModal(index) {
       selectedPostIndex = index;
-      carouselIndex = 0;
       document.body.style.overflow = 'hidden';
       renderModal();
     }
@@ -250,26 +254,9 @@ export default function handler(req, res) {
 
       setTimeout(function() {
         selectedPostIndex = newIndex;
-        carouselIndex = 0;
         renderModalContent();
         content.classList.remove('ig-modal-transitioning-next', 'ig-modal-transitioning-prev');
       }, 200);
-    }
-
-    function navigateCarousel(newIndex) {
-      const post = allPosts[selectedPostIndex];
-      const items = getCarouselItems(post);
-      const totalItems = items.length;
-
-      if (newIndex < 0) {
-        carouselIndex = totalItems - 1;
-      } else if (newIndex >= totalItems) {
-        carouselIndex = 0;
-      } else {
-        carouselIndex = newIndex;
-      }
-
-      renderModalContent();
     }
 
     function getCarouselItems(post) {
@@ -286,10 +273,10 @@ export default function handler(req, res) {
 
       modalElement = document.createElement('div');
       modalElement.className = 'ig-modal-overlay';
-      modalElement.style.cssText = 'position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(4px);';
+      modalElement.style.cssText = 'position: fixed; inset: 0; z-index: 99999; background: rgba(0, 0, 0, 0.95); backdrop-filter: blur(4px);';
       modalElement.onclick = function(e) { if (e.target === modalElement) closeModal(); };
 
-      // Touch events
+      // Touch events for horizontal swipe (post navigation)
       modalElement.ontouchstart = function(e) {
         touchStartX = e.touches[0].clientX;
         touchStartY = e.touches[0].clientY;
@@ -307,15 +294,13 @@ export default function handler(req, res) {
     function renderModalContent() {
       const post = allPosts[selectedPostIndex];
       const items = getCarouselItems(post);
-      const currentItem = items[carouselIndex];
-      const isVideo = currentItem.media_type === 'VIDEO';
       const hasMultipleItems = items.length > 1;
       const hasPrevPost = selectedPostIndex > 0;
       const hasNextPost = selectedPostIndex < allPosts.length - 1;
 
       const content = document.createElement('div');
       content.className = 'ig-modal-content';
-      content.style.cssText = 'position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; transition: all 0.2s ease;';
+      content.style.cssText = 'position: relative; width: 100%; height: 100%; transition: all 0.2s ease;';
       content.onclick = function(e) { e.stopPropagation(); };
 
       // Close button
@@ -355,83 +340,122 @@ export default function handler(req, res) {
         content.appendChild(nextBtn);
       }
 
-      // Media container
-      const mediaContainer = document.createElement('div');
-      mediaContainer.style.cssText = 'position: relative; max-width: 900px; width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;';
-
-      if (isVideo) {
-        const video = document.createElement('video');
-        video.src = currentItem.media_url;
-        video.poster = currentItem.thumbnail_url;
-        video.controls = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 2px;';
-        mediaContainer.appendChild(video);
-      } else {
-        const img = document.createElement('img');
-        img.src = currentItem.media_url;
-        img.alt = post.caption || 'Instagram post';
-        img.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain; border-radius: 2px;';
-        mediaContainer.appendChild(img);
-      }
-
-      // Carousel nav arrows (inside media)
       if (hasMultipleItems) {
-        const prevCarousel = document.createElement('button');
-        prevCarousel.style.cssText = 'position: absolute; left: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.8); cursor: pointer; transition: all 0.2s;';
-        prevCarousel.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>';
-        prevCarousel.onmouseover = function() { this.style.background = 'rgba(0,0,0,0.7)'; this.style.color = 'white'; };
-        prevCarousel.onmouseout = function() { this.style.background = 'rgba(0,0,0,0.5)'; this.style.color = 'rgba(255,255,255,0.8)'; };
-        prevCarousel.onclick = function(e) { e.stopPropagation(); navigateCarousel(carouselIndex - 1); };
-        mediaContainer.appendChild(prevCarousel);
+        // Vertical scrolling layout for carousel posts
+        const scrollContainer = document.createElement('div');
+        scrollContainer.className = 'ig-scrollbar-hide';
+        scrollContainer.style.cssText = 'height: 100%; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none;';
 
-        const nextCarousel = document.createElement('button');
-        nextCarousel.style.cssText = 'position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); border: none; border-radius: 50%; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.8); cursor: pointer; transition: all 0.2s;';
-        nextCarousel.innerHTML = '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>';
-        nextCarousel.onmouseover = function() { this.style.background = 'rgba(0,0,0,0.7)'; this.style.color = 'white'; };
-        nextCarousel.onmouseout = function() { this.style.background = 'rgba(0,0,0,0.5)'; this.style.color = 'rgba(255,255,255,0.8)'; };
-        nextCarousel.onclick = function(e) { e.stopPropagation(); navigateCarousel(carouselIndex + 1); };
-        mediaContainer.appendChild(nextCarousel);
-      }
+        const innerContainer = document.createElement('div');
+        innerContainer.style.cssText = 'max-width: 900px; margin: 0 auto; padding: 80px 16px 48px;';
 
-      content.appendChild(mediaContainer);
+        // Caption at top
+        if (post.caption) {
+          const caption = document.createElement('div');
+          caption.style.cssText = 'margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;';
+          caption.innerHTML = '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0;">' + post.caption + '</p>';
+          innerContainer.appendChild(caption);
+        }
 
-      // Carousel indicators
-      if (hasMultipleItems) {
-        const indicators = document.createElement('div');
-        indicators.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-top: 16px;';
+        // Images stacked vertically
+        const imagesContainer = document.createElement('div');
+        imagesContainer.style.cssText = 'display: flex; flex-direction: column; gap: 16px;';
 
-        items.forEach(function(_, idx) {
-          const dot = document.createElement('button');
-          dot.style.cssText = 'width: 8px; height: 8px; border-radius: 50%; border: none; cursor: pointer; transition: all 0.3s; ' +
-            (idx === carouselIndex ? 'background: white; width: 24px; border-radius: 4px;' : 'background: rgba(255,255,255,0.4);');
-          dot.onmouseover = function() { if (idx !== carouselIndex) this.style.background = 'rgba(255,255,255,0.6)'; };
-          dot.onmouseout = function() { if (idx !== carouselIndex) this.style.background = 'rgba(255,255,255,0.4)'; };
-          dot.onclick = function(e) { e.stopPropagation(); navigateCarousel(idx); };
-          indicators.appendChild(dot);
+        items.forEach(function(item, idx) {
+          const imageWrapper = document.createElement('div');
+          imageWrapper.className = 'ig-carousel-image';
+          imageWrapper.style.cssText = 'width: 100%; animation-delay: ' + (idx * 100) + 'ms;';
+
+          if (item.media_type === 'VIDEO') {
+            const video = document.createElement('video');
+            video.src = item.media_url;
+            video.poster = item.thumbnail_url;
+            video.controls = true;
+            video.playsInline = true;
+            video.style.cssText = 'width: 100%; height: auto; display: block;';
+            imageWrapper.appendChild(video);
+          } else {
+            const img = document.createElement('img');
+            img.src = item.media_url;
+            img.alt = post.caption || 'Image ' + (idx + 1);
+            img.style.cssText = 'width: 100%; height: auto; display: block;';
+            imageWrapper.appendChild(img);
+          }
+
+          imagesContainer.appendChild(imageWrapper);
         });
 
-        content.appendChild(indicators);
+        innerContainer.appendChild(imagesContainer);
+
+        // Footer info
+        const footer = document.createElement('div');
+        footer.style.cssText = 'padding: 48px 0; display: flex; align-items: center; justify-content: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;';
+
+        const date = new Date(post.timestamp);
+        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        footer.innerHTML = '<span>' + dateStr + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span><a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">View on Instagram</a>';
+        innerContainer.appendChild(footer);
+
+        scrollContainer.appendChild(innerContainer);
+        content.appendChild(scrollContainer);
+
+        // Scroll indicator
+        const scrollIndicator = document.createElement('div');
+        scrollIndicator.className = 'ig-scroll-indicator';
+        scrollIndicator.style.cssText = 'position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); z-index: 40; pointer-events: none; display: flex; flex-direction: column; align-items: center; gap: 8px; color: rgba(255,255,255,0.3);';
+        scrollIndicator.innerHTML = '<span style="font-size: 11px; font-weight: 300; letter-spacing: 0.1em; text-transform: uppercase;">Scroll</span><svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>';
+        content.appendChild(scrollIndicator);
+
+      } else {
+        // Centered layout for single image/video
+        const centerContainer = document.createElement('div');
+        centerContainer.style.cssText = 'height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px;';
+
+        // Media container
+        const mediaContainer = document.createElement('div');
+        mediaContainer.style.cssText = 'position: relative; max-width: 900px; width: 100%; max-height: 70vh; display: flex; align-items: center; justify-content: center;';
+
+        const item = items[0];
+        if (item.media_type === 'VIDEO') {
+          const video = document.createElement('video');
+          video.src = item.media_url;
+          video.poster = item.thumbnail_url;
+          video.controls = true;
+          video.autoplay = true;
+          video.playsInline = true;
+          video.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain;';
+          mediaContainer.appendChild(video);
+        } else {
+          const img = document.createElement('img');
+          img.src = item.media_url;
+          img.alt = post.caption || 'Instagram post';
+          img.style.cssText = 'max-width: 100%; max-height: 70vh; object-fit: contain;';
+          mediaContainer.appendChild(img);
+        }
+
+        centerContainer.appendChild(mediaContainer);
+
+        // Caption
+        if (post.caption) {
+          const caption = document.createElement('div');
+          caption.style.cssText = 'margin-top: 24px; max-width: 600px; text-align: center; padding: 0 16px;';
+          caption.innerHTML = '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">' + post.caption + '</p>';
+          centerContainer.appendChild(caption);
+        }
+
+        // Date and Instagram link
+        const meta = document.createElement('div');
+        meta.style.cssText = 'margin-top: 16px; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;';
+
+        const date = new Date(post.timestamp);
+        const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        meta.innerHTML = '<span>' + dateStr + '</span><a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px;">View on Instagram</a>';
+        centerContainer.appendChild(meta);
+
+        content.appendChild(centerContainer);
       }
-
-      // Caption
-      if (post.caption) {
-        const caption = document.createElement('div');
-        caption.style.cssText = 'margin-top: 24px; max-width: 600px; text-align: center; padding: 0 16px;';
-        caption.innerHTML = '<p style="color: rgba(255,255,255,0.8); font-size: 14px; font-weight: 300; line-height: 1.6; margin: 0; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">' + post.caption + '</p>';
-        content.appendChild(caption);
-      }
-
-      // Date and Instagram link
-      const meta = document.createElement('div');
-      meta.style.cssText = 'margin-top: 16px; display: flex; align-items: center; gap: 16px; color: rgba(255,255,255,0.4); font-size: 13px;';
-
-      const date = new Date(post.timestamp);
-      const dateStr = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      meta.innerHTML = '<span>' + dateStr + '</span><a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline; text-underline-offset: 2px; transition: color 0.2s;" onmouseover="this.style.color=\\'rgba(255,255,255,0.7)\\'" onmouseout="this.style.color=\\'inherit\\'">View on Instagram</a>';
-      content.appendChild(meta);
 
       // Replace modal content
       modalElement.innerHTML = '';
@@ -441,9 +465,6 @@ export default function handler(req, res) {
     function handleKeyDown(e) {
       if (selectedPostIndex === null) return;
 
-      const post = allPosts[selectedPostIndex];
-      const items = getCarouselItems(post);
-      const hasMultipleItems = items.length > 1;
       const hasPrevPost = selectedPostIndex > 0;
       const hasNextPost = selectedPostIndex < allPosts.length - 1;
 
@@ -452,22 +473,10 @@ export default function handler(req, res) {
           closeModal();
           break;
         case 'ArrowLeft':
-          if (hasMultipleItems && carouselIndex > 0) {
-            navigateCarousel(carouselIndex - 1);
-          } else if (hasPrevPost) {
-            navigatePost(selectedPostIndex - 1);
-          }
-          break;
-        case 'ArrowRight':
-          if (hasMultipleItems && carouselIndex < items.length - 1) {
-            navigateCarousel(carouselIndex + 1);
-          } else if (hasNextPost) {
-            navigatePost(selectedPostIndex + 1);
-          }
-          break;
         case 'ArrowUp':
           if (hasPrevPost) navigatePost(selectedPostIndex - 1);
           break;
+        case 'ArrowRight':
         case 'ArrowDown':
           if (hasNextPost) navigatePost(selectedPostIndex + 1);
           break;
@@ -481,27 +490,15 @@ export default function handler(req, res) {
       const deltaY = touchStartY - touchEndY;
       const minSwipeDistance = 50;
 
-      const post = allPosts[selectedPostIndex];
-      const items = getCarouselItems(post);
-      const hasMultipleItems = items.length > 1;
       const hasPrevPost = selectedPostIndex > 0;
       const hasNextPost = selectedPostIndex < allPosts.length - 1;
 
+      // Only handle horizontal swipes for post navigation
       if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-        if (deltaX > 0) {
-          // Swipe left - next
-          if (hasMultipleItems && carouselIndex < items.length - 1) {
-            navigateCarousel(carouselIndex + 1);
-          } else if (hasNextPost) {
-            navigatePost(selectedPostIndex + 1);
-          }
-        } else {
-          // Swipe right - prev
-          if (hasMultipleItems && carouselIndex > 0) {
-            navigateCarousel(carouselIndex - 1);
-          } else if (hasPrevPost) {
-            navigatePost(selectedPostIndex - 1);
-          }
+        if (deltaX > 0 && hasNextPost) {
+          navigatePost(selectedPostIndex + 1);
+        } else if (deltaX < 0 && hasPrevPost) {
+          navigatePost(selectedPostIndex - 1);
         }
       }
     }
