@@ -427,7 +427,7 @@ export default function handler(req, res) {
         scrollContainer.style.cssText = 'height:100%;overflow-y:auto;overscroll-behavior:contain;';
 
         const inner = document.createElement('div');
-        inner.style.cssText = 'max-width:900px;margin:0 auto;padding:64px 16px 160px;';
+        inner.style.cssText = 'max-width:900px;margin:0 auto;padding:128px 16px 160px;';
 
         const mediaContainer = document.createElement('div');
         mediaContainer.style.cssText = 'display:flex;flex-direction:column;gap:16px;';
@@ -465,7 +465,7 @@ export default function handler(req, res) {
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:64px 16px 160px;';
+        wrapper.style.cssText = 'height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:128px 16px 160px;';
 
         const mediaWrapper = document.createElement('div');
         mediaWrapper.style.cssText = 'max-width:900px;width:100%;max-height:70vh;display:flex;align-items:center;justify-content:center;';

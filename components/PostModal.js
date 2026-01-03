@@ -380,7 +380,7 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
               className="h-full overflow-y-auto scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', overscrollBehavior: 'contain' }}
             >
-              <div className="max-w-4xl mx-auto px-4 md:px-16 pt-16 md:pt-20 pb-40 md:pb-48">
+              <div className="max-w-4xl mx-auto px-4 md:px-16 pt-32 md:pt-40 pb-40 md:pb-48">
                 <div className="space-y-4 md:space-y-6">
                   {carouselItems.map((item, index) => (
                     <div key={item.id || index} className="w-full">
@@ -431,7 +431,7 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         ) : (
           /* Centered layout for single image/video posts */
           <>
-            <div className="h-full flex flex-col items-center justify-center pt-16 px-4 pb-40 md:pt-20 md:px-16 md:pb-48">
+            <div className="h-full flex flex-col items-center justify-center pt-32 px-4 pb-40 md:pt-40 md:px-16 md:pb-48">
               <div className="relative max-w-5xl w-full max-h-[70vh] md:max-h-[75vh] flex items-center justify-center">
                 {renderMediaItem(carouselItems[0], 0)}
               </div>
