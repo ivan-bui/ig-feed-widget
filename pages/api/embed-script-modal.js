@@ -7,7 +7,7 @@ export default function handler(req, res) {
 (function() {
   'use strict';
   
-  const API_BASE = 'https://ig-feed-widget-six.vercel.app';
+9  const API_BASE = 'https://ig-feed-widget-git-main-ivan-buis-projects-de7fae49.vercel.app';
     
   const containers = document.querySelectorAll('[data-ig-feed]');
   
