@@ -370,50 +370,60 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
       >
         {hasMultipleItems ? (
           /* Vertical scrolling layout for carousel posts */
-          <div
-            ref={scrollContainerRef}
-            className="h-full overflow-y-auto scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <div className="max-w-4xl mx-auto px-4 md:px-16 pt-20 md:pt-24">
-              {displayedPost.caption && (
-                <div className="mb-8 md:mb-12 max-w-2xl mx-auto">
-                  <p className="text-white/80 text-sm md:text-base font-light leading-relaxed">
-                    {displayedPost.caption}
-                  </p>
+          <>
+            <div
+              ref={scrollContainerRef}
+              className="h-full overflow-y-auto scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div className="max-w-4xl mx-auto px-4 md:px-16 pt-16 md:pt-20 pb-40 md:pb-48">
+                <div className="space-y-4 md:space-y-6">
+                  {carouselItems.map((item, index) => (
+                    <div key={item.id || index} className="w-full">
+                      {renderMediaItem(item, index)}
+                    </div>
+                  ))}
                 </div>
-              )}
 
-              <div className="space-y-4 md:space-y-6">
-                {carouselItems.map((item, index) => (
-                  <div key={item.id || index} className="w-full">
-                    {renderMediaItem(item, index)}
-                  </div>
-                ))}
-              </div>
-
-              <div className="py-12 md:py-16 flex items-center justify-center gap-4 text-white/40 text-xs md:text-sm">
-                <span>
-                  {new Date(displayedPost.timestamp).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-                <span>•</span>
-                <span>{carouselItems.length} images</span>
-                <span>•</span>
-                <a
-                  href={displayedPost.permalink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-white/70 transition-colors underline underline-offset-2"
-                >
-                  View on Instagram
-                </a>
+                <div className="py-8 md:py-12 flex items-center justify-center gap-4 text-white/40 text-xs md:text-sm">
+                  <span>
+                    {new Date(displayedPost.timestamp).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  <span>•</span>
+                  <span>{carouselItems.length} images</span>
+                  <span>•</span>
+                  <a
+                    href={displayedPost.permalink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-white/70 transition-colors underline underline-offset-2"
+                  >
+                    View on Instagram
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
+
+            {/* Fixed caption at bottom with gradient */}
+            {displayedPost.caption && (
+              <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+                <div
+                  className="pt-16 pb-6 md:pb-8 px-4 md:px-16"
+                  style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%)' }}
+                >
+                  <div className="max-w-2xl mx-auto">
+                    <p className="text-white/90 text-sm md:text-base font-light leading-relaxed line-clamp-3 md:line-clamp-4">
+                      {displayedPost.caption}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           /* Centered layout for single image/video posts */
           <div className="h-full flex flex-col items-center justify-center p-4 md:p-16">
@@ -450,17 +460,6 @@ export default function PostModal({ post, posts, currentIndex, onClose, onNaviga
         )}
       </div>
 
-      {/* Scroll indicator for carousel posts */}
-      {hasMultipleItems && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
-          <div className="flex flex-col items-center gap-2 text-white/30 animate-bounce">
-            <span className="text-xs font-light tracking-wider uppercase">Scroll</span>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-            </svg>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

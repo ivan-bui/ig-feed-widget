@@ -405,12 +405,16 @@ export default function handler(req, res) {
       modalElement.querySelector('.ig-nav-prev').style.display = selectedPostIndex > 0 ? 'block' : 'none';
       modalElement.querySelector('.ig-nav-next').style.display = selectedPostIndex < allPosts.length - 1 ? 'block' : 'none';
 
-      // Update scroll indicator
-      modalElement.querySelector('.ig-scroll-indicator').style.display = hasMultiple ? 'flex' : 'none';
+      // Hide scroll indicator (caption is now at bottom)
+      modalElement.querySelector('.ig-scroll-indicator').style.display = 'none';
 
       // Build content
       const content = modalElement.querySelector('.ig-content');
       content.innerHTML = '';
+
+      // Remove existing fixed caption if any
+      var existingCaption = modalElement.querySelector('.ig-fixed-caption');
+      if (existingCaption) existingCaption.parentNode.removeChild(existingCaption);
 
       if (hasMultiple) {
         const scrollContainer = document.createElement('div');
@@ -418,14 +422,7 @@ export default function handler(req, res) {
         scrollContainer.style.cssText = 'height:100%;overflow-y:auto;';
 
         const inner = document.createElement('div');
-        inner.style.cssText = 'max-width:900px;margin:0 auto;padding:80px 16px 48px;';
-
-        if (post.caption) {
-          const captionDiv = document.createElement('div');
-          captionDiv.style.cssText = 'margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;';
-          captionDiv.innerHTML = '<p style="color:rgba(255,255,255,0.8);font-size:14px;font-weight:300;line-height:1.6;margin:0;">' + post.caption + '</p>';
-          inner.appendChild(captionDiv);
-        }
+        inner.style.cssText = 'max-width:900px;margin:0 auto;padding:64px 16px 160px;';
 
         const mediaContainer = document.createElement('div');
         mediaContainer.style.cssText = 'display:flex;flex-direction:column;gap:16px;';
@@ -445,12 +442,21 @@ export default function handler(req, res) {
         inner.appendChild(mediaContainer);
 
         const footer = document.createElement('div');
-        footer.style.cssText = 'padding:48px 0;display:flex;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;';
+        footer.style.cssText = 'padding:32px 0;display:flex;align-items:center;justify-content:center;gap:16px;color:rgba(255,255,255,0.4);font-size:13px;';
         footer.innerHTML = '<span>' + date + '</span><span>•</span><span>' + items.length + ' images</span><span>•</span><a href="' + post.permalink + '" target="_blank" style="color:inherit;text-decoration:underline;">View on Instagram</a>';
         inner.appendChild(footer);
 
         scrollContainer.appendChild(inner);
         content.appendChild(scrollContainer);
+
+        // Add fixed caption at bottom with gradient
+        if (post.caption) {
+          const fixedCaption = document.createElement('div');
+          fixedCaption.className = 'ig-fixed-caption';
+          fixedCaption.style.cssText = 'position:absolute;bottom:0;left:0;right:0;z-index:10;pointer-events:none;';
+          fixedCaption.innerHTML = '<div style="padding:64px 16px 24px;background:linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 50%, transparent 100%);"><div style="max-width:600px;margin:0 auto;"><p style="color:rgba(255,255,255,0.9);font-size:14px;font-weight:300;line-height:1.6;margin:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">' + post.caption + '</p></div></div>';
+          modalElement.appendChild(fixedCaption);
+        }
       } else {
         const item = items[0];
         const wrapper = document.createElement('div');
