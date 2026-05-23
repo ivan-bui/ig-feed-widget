@@ -1,6 +1,6 @@
 export default function handler(req, res) {
   res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.setHeader('Cache-Control', 'public, max-age=60');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   const scriptContent = `
