@@ -147,18 +147,18 @@ export default function handler(req, res) {
             '<div style="flex:1;">' +
               '<h1 style="font-size:16px;font-weight:600;margin:0 0 8px;">' + profile.username + '</h1>' +
               '<div style="display:flex;justify-content:space-between;">' +
-                '<div style="text-align:center;">' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;color:inherit;">' +
                   '<div style="font-weight:600;font-size:14px;">' + profile.postsCount + '</div>' +
                   '<div style="color:#9ca3af;font-size:12px;">posts</div>' +
-                '</div>' +
-                '<div style="text-align:center;">' +
+                '</a>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;color:inherit;">' +
                   '<div style="font-weight:600;font-size:14px;">' + profile.followersCount + '</div>' +
                   '<div style="color:#9ca3af;font-size:12px;">followers</div>' +
-                '</div>' +
-                '<div style="text-align:center;">' +
+                '</a>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-align:center;text-decoration:none;color:inherit;">' +
                   '<div style="font-weight:600;font-size:14px;">' + profile.followingCount + '</div>' +
                   '<div style="color:#9ca3af;font-size:12px;">following</div>' +
-                '</div>' +
+                '</a>' +
               '</div>' +
             '</div>' +
           '</div>' +
@@ -168,10 +168,10 @@ export default function handler(req, res) {
           (profile.location ? '<p style="font-size:14px;color:#9ca3af;margin:0 0 12px;">' + profile.location + '</p>' : '') +
           '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
             '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="flex:1;padding:8px;background:#0095f6;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;text-align:center;">Follow</a>' +
-            '<button style="flex:1;padding:8px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;">Message</button>' +
-            '<button style="padding:8px 12px;background:#363636;border-radius:8px;border:none;cursor:pointer;">' +
+            '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="flex:1;padding:8px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;text-align:center;">Message</a>' +
+            '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="padding:8px 12px;background:#363636;border-radius:8px;display:flex;align-items:center;justify-content:center;">' +
               '<svg style="width:16px;height:16px;" fill="white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' +
-            '</button>' +
+            '</a>' +
           '</div>';
       } else {
         // Desktop layout
@@ -186,15 +186,15 @@ export default function handler(req, res) {
               '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">' +
                 '<h1 style="font-size:20px;font-weight:400;margin:0;">' + profile.username + '</h1>' +
                 '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="padding:6px 24px;background:#0095f6;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;">Follow</a>' +
-                '<button style="padding:6px 24px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;">Message</button>' +
-                '<button style="padding:4px;background:none;border:none;cursor:pointer;">' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="padding:6px 24px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;">Message</a>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="padding:4px;display:flex;align-items:center;">' +
                   '<svg style="width:24px;height:24px;" fill="white" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' +
-                '</button>' +
+                '</a>' +
               '</div>' +
               '<div style="display:flex;gap:32px;margin-bottom:16px;">' +
-                '<span><strong>' + profile.postsCount + '</strong> posts</span>' +
-                '<span><strong>' + profile.followersCount + '</strong> followers</span>' +
-                '<span><strong>' + profile.followingCount + '</strong> following</span>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;"><strong>' + profile.postsCount + '</strong> posts</a>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;"><strong>' + profile.followersCount + '</strong> followers</a>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="text-decoration:none;color:inherit;"><strong>' + profile.followingCount + '</strong> following</a>' +
               '</div>' +
               (profile.displayName ? '<p style="font-weight:600;font-size:14px;color:#9ca3af;margin:0 0 4px;">' + profile.displayName + '</p>' : '') +
               (profile.category ? '<p style="font-size:14px;color:#6b7280;margin:0 0 4px;">' + profile.category + '</p>' : '') +

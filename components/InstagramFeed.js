@@ -438,18 +438,16 @@ export default function InstagramFeed({ maxPosts = 50 }) {
                 <h1 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>{profile.username}</h1>
                 {/* Stats row — stacked: count above, label below */}
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.postsCount}</div>
-                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>posts</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.followersCount}</div>
-                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>followers</div>
-                  </div>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.followingCount}</div>
-                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>following</div>
-                  </div>
+                  {[
+                    { count: profile.postsCount, label: 'posts' },
+                    { count: profile.followersCount, label: 'followers' },
+                    { count: profile.followingCount, label: 'following' },
+                  ].map(({ count, label }) => (
+                    <a key={label} href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ textAlign: 'center', textDecoration: 'none', color: 'inherit' }}>
+                      <div style={{ fontWeight: 600, fontSize: '14px' }}>{count}</div>
+                      <div style={{ color: '#9ca3af', fontSize: '12px' }}>{label}</div>
+                    </a>
+                  ))}
                 </div>
               </div>
               
@@ -485,14 +483,14 @@ export default function InstagramFeed({ maxPosts = 50 }) {
               >
                 Follow
               </a>
-              <button style={styles.messageBtn}>
+              <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ ...styles.messageBtn, textDecoration: 'none', textAlign: 'center' }}>
                 Message
-              </button>
-              <button style={styles.iconBtn}>
+              </a>
+              <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ ...styles.iconBtn, textDecoration: 'none' }}>
                 <svg style={{ width: '16px', height: '16px' }} fill="white" viewBox="0 0 24 24">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                 </svg>
-              </button>
+              </a>
             </div>
 
           </div>
@@ -523,23 +521,29 @@ export default function InstagramFeed({ maxPosts = 50 }) {
                 >
                   Follow
                 </a>
-                <button style={{ ...styles.messageBtn, flex: 'none', padding: '6px 24px' }}>
+                <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ ...styles.messageBtn, flex: 'none', padding: '6px 24px', textDecoration: 'none', textAlign: 'center' }}>
                   Message
-                </button>
-                <button style={styles.menuBtn}>
+                </a>
+                <a href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ ...styles.menuBtn, display: 'flex', alignItems: 'center' }}>
                   <svg style={{ width: '24px', height: '24px' }} fill="white" viewBox="0 0 24 24">
                     <circle cx="5" cy="12" r="2"/>
                     <circle cx="12" cy="12" r="2"/>
                     <circle cx="19" cy="12" r="2"/>
                   </svg>
-                </button>
+                </a>
               </div>
 
               {/* Stats row */}
               <div style={{ display: 'flex', gap: '32px', marginBottom: '16px' }}>
-                <span><strong>{profile.postsCount}</strong> posts</span>
-                <span><strong>{profile.followersCount}</strong> followers</span>
-                <span><strong>{profile.followingCount}</strong> following</span>
+                {[
+                  { count: profile.postsCount, label: 'posts' },
+                  { count: profile.followersCount, label: 'followers' },
+                  { count: profile.followingCount, label: 'following' },
+                ].map(({ count, label }) => (
+                  <a key={label} href={profileUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <strong>{count}</strong> {label}
+                  </a>
+                ))}
               </div>
 
               {/* Display name */}
