@@ -421,10 +421,10 @@ export default function InstagramFeed({ maxPosts = 50 }) {
         <div style={styles.profileSection} className="animate-slide-up">
           {/* Mobile layout */}
           <div className="md:hidden">
-            {/* Top row: Avatar + Username */}
+            {/* Top row: Avatar + Username + Stats */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
               {/* Avatar with gradient ring */}
-              <div style={{ width: '86px', height: '86px' }}>
+              <div style={{ ...styles.avatarRing, width: '86px', height: '86px', padding: '3px' }}>
                 <div style={styles.avatarInner}>
                   <img
                     src={profile.avatar}
@@ -435,22 +435,20 @@ export default function InstagramFeed({ maxPosts = 50 }) {
               </div>
 
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <h1 style={{ fontSize: '18px', fontWeight: 400, margin: '5px' }}>{profile.displayName}</h1>
-                </div>
-                {/* Stats row */}
-                <div style={styles.statsRow}>
+                <h1 style={{ fontSize: '16px', fontWeight: 600, margin: '0 0 8px' }}>{profile.username}</h1>
+                {/* Stats row — stacked: count above, label below */}
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600 }}>{profile.postsCount}</div>
-                    <div style={{ color: '#9ca3af', marginLeft: '4px' }}>posts</div>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.postsCount}</div>
+                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>posts</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600 }}>{profile.followersCount}</div>
-                    <div style={{ color: '#9ca3af', marginLeft: '4px' }}>followers</div>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.followersCount}</div>
+                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>followers</div>
                   </div>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 600 }}>{profile.followingCount}</div>
-                    <div style={{ color: '#9ca3af', marginLeft: '4px' }}>following</div>
+                    <div style={{ fontWeight: 600, fontSize: '14px' }}>{profile.followingCount}</div>
+                    <div style={{ color: '#9ca3af', fontSize: '12px' }}>following</div>
                   </div>
                 </div>
               </div>
