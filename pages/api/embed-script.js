@@ -97,21 +97,28 @@ export default function handler(req, res) {
       loadMorePosts(true);
     }
 
-    // Fallback profile data - customize via data attributes or defaults
+    var DEFAULT_POSTS = [
+      { id: '1', thumbnail: API_BASE + '/ig-thumbnail-1.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DXsWxbMETqU/', isVideo: false, isCarousel: false },
+      { id: '2', thumbnail: API_BASE + '/ig-thumbnail-2.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DX53bBOxzJ7/', isVideo: false, isCarousel: false },
+      { id: '3', thumbnail: API_BASE + '/ig-thumbnail-3.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DV7Sb-YkZrD/', isVideo: false, isCarousel: false },
+      { id: '4', thumbnail: API_BASE + '/ig-thumbnail-4.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DWXepGLDjni/', isVideo: false, isCarousel: false },
+      { id: '5', thumbnail: API_BASE + '/ig-thumbnail-5.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DVMxj8dDqN1/', isVideo: false, isCarousel: false },
+      { id: '6', thumbnail: API_BASE + '/ig-thumbnail-6.jpg', permalink: 'https://www.instagram.com/theallg.spa/reel/DYQwOunxeSM/', isVideo: false, isCarousel: false }
+    ];
+
     var fallbackProfile = {
       username: container.getAttribute('data-ig-username') || 'theallg.spa',
-      displayName: container.getAttribute('data-ig-display-name') || '',
-      avatar: container.getAttribute('data-ig-avatar') || 'https://via.placeholder.com/150',
-      bio: container.getAttribute('data-ig-bio') || '',
-      postsCount: container.getAttribute('data-ig-posts-count') || '0',
-      followersCount: container.getAttribute('data-ig-followers-count') || '0',
-      followingCount: container.getAttribute('data-ig-following-count') || '0',
+      displayName: container.getAttribute('data-ig-display-name') || 'The All G Nails & Head Spa',
+      avatar: container.getAttribute('data-ig-avatar') || (API_BASE + '/avatar.jpg'),
+      bio: container.getAttribute('data-ig-bio') || 'Welcome to The All G - your local escape. Famous for our head spa on massage beds',
+      postsCount: container.getAttribute('data-ig-posts-count') || '241',
+      followersCount: container.getAttribute('data-ig-followers-count') || '1,464',
+      followingCount: container.getAttribute('data-ig-following-count') || '167',
       category: container.getAttribute('data-ig-category') || '',
       location: container.getAttribute('data-ig-location') || '',
-      posts: []
+      posts: DEFAULT_POSTS
     };
 
-    // Parse posts from data attribute if provided (JSON array)
     try {
       var postsData = container.getAttribute('data-ig-fallback-posts');
       if (postsData) fallbackProfile.posts = JSON.parse(postsData);
@@ -239,6 +246,7 @@ export default function handler(req, res) {
         .then(r => r.ok ? r.json() : Promise.reject())
         .then(function(data) {
           if (!data.posts || !data.posts.length) {
+            isLoading = false;
             hasMore = false;
             loadingIndicator.style.display = 'none';
             if (isInitial) showFallbackUI();
@@ -255,6 +263,8 @@ export default function handler(req, res) {
               img.onerror = function() { resolve(false); };
               img.src = testUrl;
             }).then(function(imgOk) {
+              isLoading = false;
+              loadingIndicator.style.display = 'none';
               if (!imgOk) { showFallbackUI(); return; }
               data.posts.forEach(function(post) {
                 allPosts.push(post);
@@ -262,8 +272,6 @@ export default function handler(req, res) {
               });
               hasMore = data.hasMore;
               nextCursor = data.nextCursor;
-              isLoading = false;
-              loadingIndicator.style.display = 'none';
             });
           }
           data.posts.forEach(function(post) {
