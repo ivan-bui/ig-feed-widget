@@ -32,6 +32,8 @@ export default function handler(req, res) {
     .ig-content.center { transform: translateX(0); opacity: 1; }
     .ig-video-overlay { transition: opacity 0.3s ease-out; }
     .ig-video-overlay.hidden { opacity: 0; }
+    @keyframes ig-slide-up { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+    .ig-fallback-panel { animation: ig-slide-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; animation-delay: 0.3s; opacity: 0; }
   \`;
   document.head.appendChild(styleSheet);
 
@@ -95,6 +97,136 @@ export default function handler(req, res) {
       loadMorePosts(true);
     }
 
+    // Fallback profile data - customize via data attributes or defaults
+    var fallbackProfile = {
+      username: container.getAttribute('data-ig-username') || 'instagram',
+      displayName: container.getAttribute('data-ig-display-name') || '',
+      avatar: container.getAttribute('data-ig-avatar') || 'https://via.placeholder.com/150',
+      bio: container.getAttribute('data-ig-bio') || '',
+      postsCount: container.getAttribute('data-ig-posts-count') || '0',
+      followersCount: container.getAttribute('data-ig-followers-count') || '0',
+      followingCount: container.getAttribute('data-ig-following-count') || '0',
+      category: container.getAttribute('data-ig-category') || '',
+      location: container.getAttribute('data-ig-location') || '',
+      posts: []
+    };
+
+    // Parse posts from data attribute if provided (JSON array)
+    try {
+      var postsData = container.getAttribute('data-ig-fallback-posts');
+      if (postsData) fallbackProfile.posts = JSON.parse(postsData);
+    } catch(e) {}
+
+    function showFallbackUI() {
+      var profile = fallbackProfile;
+      var profileUrl = 'https://instagram.com/' + profile.username;
+      var isMobile = window.innerWidth < 768;
+
+      container.innerHTML = '';
+      container.style.cssText = 'min-height:100vh;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;';
+
+      // Build the Instagram dark mode UI
+      var html = '<div class="ig-fallback-panel" style="max-width:935px;margin:0 auto;padding:24px 16px;">';
+
+      if (isMobile) {
+        // Mobile layout
+        html += '' +
+          '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">' +
+            '<div style="width:86px;height:86px;border-radius:50%;padding:3px;background:linear-gradient(to bottom right,#fbbf24,#ec4899,#9333ea);flex-shrink:0;">' +
+              '<div style="width:100%;height:100%;border-radius:50%;background:#000;padding:3px;">' +
+                '<img src="' + profile.avatar + '" alt="' + profile.displayName + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>' +
+              '</div>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="display:flex;align-items:center;gap:8px;">' +
+                '<h1 style="font-size:18px;font-weight:400;margin:0;">' + profile.username + '</h1>' +
+                '<button style="padding:4px;background:none;border:none;cursor:pointer;">' +
+                  '<svg style="width:24px;height:24px;" fill="white" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' +
+                '</button>' +
+              '</div>' +
+            '</div>' +
+          '</div>' +
+          (profile.displayName ? '<p style="font-size:14px;font-weight:600;color:#9ca3af;margin:0 0 4px;">' + profile.displayName + '</p>' : '') +
+          (profile.category ? '<p style="font-size:14px;color:#6b7280;margin:0 0 4px;">' + profile.category + '</p>' : '') +
+          (profile.bio ? '<p style="font-size:14px;margin:0 0 8px;white-space:pre-line;">' + profile.bio + '</p>' : '') +
+          (profile.location ? '<p style="font-size:14px;color:#9ca3af;margin:0 0 12px;">' + profile.location + '</p>' : '') +
+          '<div style="display:flex;gap:8px;margin-bottom:16px;">' +
+            '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="flex:1;padding:8px;background:#0095f6;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;text-align:center;">Follow</a>' +
+            '<button style="flex:1;padding:8px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;">Message</button>' +
+            '<button style="padding:8px 12px;background:#363636;border-radius:8px;border:none;cursor:pointer;">' +
+              '<svg style="width:16px;height:16px;" fill="white" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' +
+            '</button>' +
+          '</div>' +
+          '<div style="display:flex;justify-content:space-around;padding:12px 0;border-top:1px solid #262626;border-bottom:1px solid #262626;">' +
+            '<div style="text-align:center;"><span style="font-weight:600;">' + profile.postsCount + '</span><span style="color:#9ca3af;margin-left:4px;">posts</span></div>' +
+            '<div style="text-align:center;"><span style="font-weight:600;">' + profile.followersCount + '</span><span style="color:#9ca3af;margin-left:4px;">followers</span></div>' +
+            '<div style="text-align:center;"><span style="font-weight:600;">' + profile.followingCount + '</span><span style="color:#9ca3af;margin-left:4px;">following</span></div>' +
+          '</div>';
+      } else {
+        // Desktop layout
+        html += '' +
+          '<div style="display:flex;align-items:flex-start;gap:32px;margin-bottom:32px;">' +
+            '<div style="width:150px;height:150px;border-radius:50%;padding:4px;background:linear-gradient(to bottom right,#fbbf24,#ec4899,#9333ea);flex-shrink:0;">' +
+              '<div style="width:100%;height:100%;border-radius:50%;background:#000;padding:4px;">' +
+                '<img src="' + profile.avatar + '" alt="' + profile.displayName + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>' +
+              '</div>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;">' +
+                '<h1 style="font-size:20px;font-weight:400;margin:0;">' + profile.username + '</h1>' +
+                '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="padding:6px 24px;background:#0095f6;color:white;font-size:14px;font-weight:600;border-radius:8px;text-decoration:none;">Follow</a>' +
+                '<button style="padding:6px 24px;background:#363636;color:white;font-size:14px;font-weight:600;border-radius:8px;border:none;cursor:pointer;">Message</button>' +
+                '<button style="padding:4px;background:none;border:none;cursor:pointer;">' +
+                  '<svg style="width:24px;height:24px;" fill="white" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' +
+                '</button>' +
+              '</div>' +
+              '<div style="display:flex;gap:32px;margin-bottom:16px;">' +
+                '<span><strong>' + profile.postsCount + '</strong> posts</span>' +
+                '<span><strong>' + profile.followersCount + '</strong> followers</span>' +
+                '<span><strong>' + profile.followingCount + '</strong> following</span>' +
+              '</div>' +
+              (profile.displayName ? '<p style="font-weight:600;font-size:14px;color:#9ca3af;margin:0 0 4px;">' + profile.displayName + '</p>' : '') +
+              (profile.category ? '<p style="font-size:14px;color:#6b7280;margin:0 0 4px;">' + profile.category + '</p>' : '') +
+              (profile.bio ? '<p style="font-size:14px;margin:0 0 4px;white-space:pre-line;">' + profile.bio + '</p>' : '') +
+              (profile.location ? '<p style="font-size:14px;color:#9ca3af;margin:0;">' + profile.location + '</p>' : '') +
+            '</div>' +
+          '</div>';
+      }
+
+      // Posts grid
+      if (profile.posts.length > 0) {
+        html += '<div style="border-top:1px solid #262626;padding-top:16px;margin-top:16px;">' +
+          '<div style="display:flex;justify-content:center;gap:8px;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;">' +
+            '<div style="border-top:1px solid white;padding-top:16px;margin-top:-17px;color:white;display:flex;align-items:center;gap:4px;">' +
+              '<svg style="width:12px;height:12px;" fill="currentColor" viewBox="0 0 24 24"><rect x="2" y="2" width="9" height="9" rx="1"/><rect x="13" y="2" width="9" height="9" rx="1"/><rect x="2" y="13" width="9" height="9" rx="1"/><rect x="13" y="13" width="9" height="9" rx="1"/></svg>' +
+              '<span>Posts</span>' +
+            '</div>' +
+          '</div>' +
+          '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;">';
+
+        profile.posts.forEach(function(post) {
+          html += '<a href="' + post.permalink + '" target="_blank" rel="noopener noreferrer" style="aspect-ratio:1;position:relative;background:#1a1a1a;display:block;overflow:hidden;">' +
+            '<img src="' + post.thumbnail + '" alt="" style="width:100%;height:100%;object-fit:cover;"/>' +
+            (post.isVideo ? '<div style="position:absolute;top:8px;right:8px;"><svg style="width:20px;height:20px;color:white;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>' : '') +
+            (post.isCarousel ? '<div style="position:absolute;top:8px;right:8px;"><svg style="width:20px;height:20px;color:white;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));" fill="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>' : '') +
+          '</a>';
+        });
+
+        html += '</div></div>';
+      }
+
+      html += '<div style="text-align:center;margin-top:24px;">' +
+          '<a href="' + profileUrl + '" target="_blank" rel="noopener noreferrer" style="color:#0095f6;font-size:14px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:8px;">' +
+            'View full profile on Instagram' +
+            '<svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>' +
+          '</a>' +
+        '</div>' +
+        '<p style="text-align:center;color:#4b5563;font-size:12px;margin-top:16px;">Live feed temporarily unavailable • Showing preview</p>' +
+        '</div>';
+
+      container.innerHTML = html;
+    }
+
     function loadMorePosts(isInitial) {
       if (isLoading) return;
       isLoading = true;
@@ -121,9 +253,9 @@ export default function handler(req, res) {
           loadingIndicator.style.display = 'none';
         })
         .catch(function() {
-          loadingIndicator.innerHTML = '<p style="color: #e53e3e;">Failed to load posts.</p>';
           isLoading = false;
           hasMore = false;
+          showFallbackUI();
         });
     }
 
