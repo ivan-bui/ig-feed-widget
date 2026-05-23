@@ -99,7 +99,7 @@ export default function handler(req, res) {
 
     // Fallback profile data - customize via data attributes or defaults
     var fallbackProfile = {
-      username: container.getAttribute('data-ig-username') || 'instagram',
+      username: container.getAttribute('data-ig-username') || 'theallg.spa',
       displayName: container.getAttribute('data-ig-display-name') || '',
       avatar: container.getAttribute('data-ig-avatar') || 'https://via.placeholder.com/150',
       bio: container.getAttribute('data-ig-bio') || '',
@@ -119,7 +119,7 @@ export default function handler(req, res) {
 
     function showFallbackUI() {
       var profile = fallbackProfile;
-      var profileUrl = 'https://instagram.com/' + profile.username;
+      var profileUrl = 'https://www.instagram.com/' + profile.username;
       var isMobile = window.innerWidth < 768;
 
       container.innerHTML = '';
@@ -241,7 +241,30 @@ export default function handler(req, res) {
           if (!data.posts || !data.posts.length) {
             hasMore = false;
             loadingIndicator.style.display = 'none';
+            if (isInitial) showFallbackUI();
             return;
+          }
+          // On first load, verify images are reachable before rendering live feed
+          if (isInitial) {
+            var firstPost = data.posts[0];
+            var testUrl = firstPost.media_type === 'VIDEO' ? firstPost.thumbnail_url : firstPost.media_url;
+            return new Promise(function(resolve) {
+              if (!testUrl) { resolve(true); return; }
+              var img = new Image();
+              img.onload = function() { resolve(true); };
+              img.onerror = function() { resolve(false); };
+              img.src = testUrl;
+            }).then(function(imgOk) {
+              if (!imgOk) { showFallbackUI(); return; }
+              data.posts.forEach(function(post) {
+                allPosts.push(post);
+                postsContainer.appendChild(createPostElement(post, allPosts.length - 1));
+              });
+              hasMore = data.hasMore;
+              nextCursor = data.nextCursor;
+              isLoading = false;
+              loadingIndicator.style.display = 'none';
+            });
           }
           data.posts.forEach(function(post) {
             allPosts.push(post);

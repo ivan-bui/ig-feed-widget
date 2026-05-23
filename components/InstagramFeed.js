@@ -102,29 +102,44 @@ export default function InstagramFeed({ maxPosts = 50 }) {
 
   const fetchInitialPosts = async () => {
     try {
-      // Initial load: 15 posts for fast first paint
       const response = await fetch('/api/instagram?limit=15');
-      
+
+      if (!response.ok) {
+        throw new Error('API unavailable');
+      }
+
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
-      
+
       if (!data.data || data.data.length === 0) {
         throw new Error('No Instagram posts found');
       }
-      
+
+      // Verify at least one image URL is reachable before committing to live feed
+      const firstPost = data.data[0];
+      const testUrl = firstPost.media_type === 'VIDEO' ? firstPost.thumbnail_url : firstPost.media_url;
+      if (testUrl) {
+        const imgOk = await new Promise(resolve => {
+          const img = new Image();
+          img.onload = () => resolve(true);
+          img.onerror = () => resolve(false);
+          img.src = testUrl;
+        });
+        if (!imgOk) throw new Error('Media URLs have expired');
+      }
+
       setPosts(data.data);
-      
-      // Check if there are more posts
+
       if (data.paging?.cursors?.after) {
         setNextCursor(data.paging.cursors.after);
         setHasMore(true);
       } else {
         setHasMore(false);
       }
-      
+
       setLoading(false);
 
     } catch (err) {
@@ -248,7 +263,7 @@ export default function InstagramFeed({ maxPosts = 50 }) {
 
   if (error) {
     const profile = fallbackProfile;
-    const profileUrl = `https://instagram.com/${profile.username}`;
+    const profileUrl = `https://www.instagram.com/${profile.username}`;
 
     // Inline styles for guaranteed rendering
     const styles = {
